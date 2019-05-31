@@ -92,29 +92,10 @@ extern "C" {
 
 #define BSP_SELF_PINRESET_PIN NRF_GPIO_PIN_MAP(0,19)
 
-#define RX_PIN_NUMBER  8
-#define TX_PIN_NUMBER  6
-#define CTS_PIN_NUMBER 7
-#define RTS_PIN_NUMBER 5
 #define HWFC           true
 
 
 
-// serialization APPLICATION board - temp. setup for running serialized MEMU tests
-#define SER_APP_RX_PIN              NRF_GPIO_PIN_MAP(1,13)    // UART RX pin number.
-#define SER_APP_TX_PIN              NRF_GPIO_PIN_MAP(1,14)    // UART TX pin number.
-#define SER_APP_CTS_PIN             NRF_GPIO_PIN_MAP(0,2)     // UART Clear To Send pin number.
-#define SER_APP_RTS_PIN             NRF_GPIO_PIN_MAP(1,15)    // UART Request To Send pin number.
-
-
-// serialization APPLICATION board - temp. setup for running serialized MEMU tests
-
-#define SER_APP_SPIM0_SCK_PIN       NRF_GPIO_PIN_MAP(0,17)     // SPI clock GPIO pin number.
-#define SER_APP_SPIM0_MOSI_PIN      NRF_GPIO_PIN_MAP(0,20)      // SPI Master Out Slave In GPIO pin number
-#define SER_APP_SPIM0_MISO_PIN      NRF_GPIO_PIN_MAP(0,13)     // SPI Master In Slave Out GPIO pin number
-#define SER_APP_SPIM0_SS_PIN        NRF_GPIO_PIN_MAP(0,15)     // SPI Slave Select GPIO pin number
-#define SER_APP_SPIM0_RDY_PIN       NRF_GPIO_PIN_MAP(1,15)     // SPI READY GPIO pin number
-#define SER_APP_SPIM0_REQ_PIN       NRF_GPIO_PIN_MAP(1,14)     // SPI REQUEST GPIO pin number
 
 #ifdef __cplusplus
 }
