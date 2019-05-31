@@ -181,30 +181,34 @@ static void scan_init(void)
  * @details This function takes a list of characters of length data_len and prints the characters out on UART.
  *          If @ref ECHOBACK_BLE_UART_DATA is set, the data is sent back to sender.
  */
-static void ble_nus_chars_received_uart_print(uint8_t * p_data, uint16_t data_len)
+static void ble_nus_chars_received(uint8_t * p_data, uint16_t data_len)
 {
-    ret_code_t ret_val;
+    ret_code_t ret_val = NRF_SUCCESS;
 
-    NRF_LOG_DEBUG("Receiving data.");
+    SEGGER_RTT_WriteString(0,"Receiving data.\n");
     NRF_LOG_HEXDUMP_DEBUG(p_data, data_len);
 
     for (uint32_t i = 0; i < data_len; i++)
     {
         do
         {
-            ret_val = app_uart_put(p_data[i]);
+        	//////////////////////////////////////////////////////////////////////
+            // put the data to usbd. ====> (ret_val = app_uart_put(p_data[i]);)
+        	//////////////////////////////////////////////////////////////////////
             if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
             {
-                NRF_LOG_ERROR("app_uart_put failed for index 0x%04x.", i);
+            	SEGGER_RTT_printf(0,"app_uart_put failed for index 0x%04x.\n", i);
                 APP_ERROR_CHECK(ret_val);
             }
         } while (ret_val == NRF_ERROR_BUSY);
     }
     if (p_data[data_len-1] == '\r')
     {
-        while (app_uart_put('\n') == NRF_ERROR_BUSY);
+    	//////////////////////////////////////////////////////////////////////
+        //while (app_uart_put('\n') == NRF_ERROR_BUSY);
+    	//////////////////////////////////////////////////////////////////////
     }
-    if (ECHOBACK_BLE_UART_DATA)
+    if (ECHOBACK_BLE_UART_DATA)// ECHO ===> sends received data back to transmitter
     {
         // Send data back to the peripheral.
         do
@@ -212,7 +216,7 @@ static void ble_nus_chars_received_uart_print(uint8_t * p_data, uint16_t data_le
             ret_val = ble_nus_c_string_send(&m_ble_nus_c, p_data, data_len);
             if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
             {
-                NRF_LOG_ERROR("Failed sending NUS message. Error 0x%x. ", ret_val);
+            	SEGGER_RTT_printf(0,"Failed sending NUS message. Error 0x%x. \n", ret_val);
                 APP_ERROR_CHECK(ret_val);
             }
         } while (ret_val == NRF_ERROR_BUSY);
@@ -248,7 +252,9 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
             break;
 
         case BLE_NUS_C_EVT_NUS_TX_EVT:
-            ble_nus_chars_received_uart_print(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
+        	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////<=============
+            ble_nus_chars_received(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////<=============
             SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_NUS_TX_EVT \n");
             break;
 
@@ -290,11 +296,18 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 
         case BLE_GAP_EVT_DISCONNECTED:
         	bsp_board_led_off(LEDG2);
-            NRF_LOG_INFO("Disconnected. conn_handle: 0x%x, reason: 0x%x",
+        	SEGGER_RTT_printf(0,"Disconnected. conn_handle: 0x%x, reason: 0x%x",
                          p_gap_evt->conn_handle,
                          p_gap_evt->params.disconnected.reason);
             SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_DISCONNECTED \n");
             break;
+
+        case BLE_GAP_EVT_ADV_REPORT:
+                {
+
+
+                }
+            break; // BLE_GAP_ADV_REPORT
 
         case BLE_GAP_EVT_TIMEOUT:
             if (p_gap_evt->params.timeout.src == BLE_GAP_TIMEOUT_SRC_CONN)
