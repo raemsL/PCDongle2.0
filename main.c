@@ -99,10 +99,11 @@ static void scan_start(void)
 
     ret = nrf_ble_scan_start(&m_scan);
     APP_ERROR_CHECK(ret);
+    bsp_board_led_on(LEDB);
 
     ret = bsp_indication_set(BSP_INDICATE_SCANNING);
     APP_ERROR_CHECK(ret);
-
+    SEGGER_RTT_WriteString(0,"scan_start() \n");
 }
 
 /**@brief Function for handling Scanning Module events.
@@ -117,14 +118,16 @@ static void scan_evt_handler(scan_evt_t const * p_scan_evt)
          {
               err_code = p_scan_evt->params.connecting_err.err_code;
               APP_ERROR_CHECK(err_code);
+              SEGGER_RTT_WriteString(0,"NRF_BLE_SCAN_EVT_CONNECTING_ERROR \n");
          } break;
 
          case NRF_BLE_SCAN_EVT_CONNECTED:
          {
+        	 bsp_board_led_off(LEDB);
               ble_gap_evt_connected_t const * p_connected =
                                p_scan_evt->params.connected.p_connected;
              // Scan is automatically stopped by the connection.
-             NRF_LOG_INFO("Connecting to target %02x%02x%02x%02x%02x%02x",
+              SEGGER_RTT_printf(0,"Connecting to target %02x%02x%02x%02x%02x%02x",
                       p_connected->peer_addr.addr[0],
                       p_connected->peer_addr.addr[1],
                       p_connected->peer_addr.addr[2],
@@ -132,12 +135,16 @@ static void scan_evt_handler(scan_evt_t const * p_scan_evt)
                       p_connected->peer_addr.addr[4],
                       p_connected->peer_addr.addr[5]
                       );
-         } break;
+         }
+         SEGGER_RTT_WriteString(0,"NRF_BLE_SCAN_EVT_CONNECTED \n");
+         break;
 
          case NRF_BLE_SCAN_EVT_SCAN_TIMEOUT:
          {
+        	 bsp_board_led_off(LEDB);
              NRF_LOG_INFO("Scan timed out.");
              scan_start();
+             SEGGER_RTT_WriteString(0,"NRF_BLE_SCAN_EVT_SCAN_TIMEOUT \n");
          } break;
 
          default:
@@ -166,6 +173,7 @@ static void scan_init(void)
 
     err_code = nrf_ble_scan_filters_enable(&m_scan, NRF_BLE_SCAN_UUID_FILTER, false);
     APP_ERROR_CHECK(err_code);
+    SEGGER_RTT_WriteString(0,"scan_init() \n");
 }
 
 /**@brief Function for handling characters received by the Nordic UART Service (NUS).
@@ -209,6 +217,7 @@ static void ble_nus_chars_received_uart_print(uint8_t * p_data, uint16_t data_le
             }
         } while (ret_val == NRF_ERROR_BUSY);
     }
+    SEGGER_RTT_WriteString(0,"ble_nus_chars_received_uart_print() \n");
 }
 
 
@@ -235,15 +244,18 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
             err_code = ble_nus_c_tx_notif_enable(p_ble_nus_c);
             APP_ERROR_CHECK(err_code);
             NRF_LOG_INFO("Connected to device with Nordic UART Service.");
+            SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_DISCOVERY_COMPLETE \n");
             break;
 
         case BLE_NUS_C_EVT_NUS_TX_EVT:
             ble_nus_chars_received_uart_print(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
+            SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_NUS_TX_EVT \n");
             break;
 
         case BLE_NUS_C_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected.");
             scan_start();
+            SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_DISCONNECTED \n");
             break;
     }
 }
@@ -271,13 +283,17 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             // start discovery of services. The NUS Client waits for a discovery result
             err_code = ble_db_discovery_start(&m_db_disc, p_ble_evt->evt.gap_evt.conn_handle);
             APP_ERROR_CHECK(err_code);
+            bsp_board_led_off(LEDG1);
+            bsp_board_led_on(LEDG2);
+            SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_CONNECTED \n");
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
-
+        	bsp_board_led_off(LEDG2);
             NRF_LOG_INFO("Disconnected. conn_handle: 0x%x, reason: 0x%x",
                          p_gap_evt->conn_handle,
                          p_gap_evt->params.disconnected.reason);
+            SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_DISCONNECTED \n");
             break;
 
         case BLE_GAP_EVT_TIMEOUT:
@@ -285,12 +301,14 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             {
                 NRF_LOG_INFO("Connection Request timed out.");
             }
+            SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_TIMEOUT \n");
             break;
 
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
             // Pairing not supported.
             err_code = sd_ble_gap_sec_params_reply(p_ble_evt->evt.gap_evt.conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL);
             APP_ERROR_CHECK(err_code);
+            SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_SEC_PARAMS_REQUEST \n");
             break;
 
         case BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST:
@@ -298,6 +316,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             err_code = sd_ble_gap_conn_param_update(p_gap_evt->conn_handle,
                                                     &p_gap_evt->params.conn_param_update_request.conn_params);
             APP_ERROR_CHECK(err_code);
+            SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST \n");
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
@@ -310,6 +329,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             };
             err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
             APP_ERROR_CHECK(err_code);
+            SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_PHY_UPDATE_REQUEST \n");
         } break;
 
         case BLE_GATTC_EVT_TIMEOUT:
@@ -318,6 +338,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
+            SEGGER_RTT_WriteString(0,"BLE_GATTS_EVT_TIMEOUT \n");
             break;
 
         case BLE_GATTS_EVT_TIMEOUT:
@@ -326,6 +347,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
+            SEGGER_RTT_WriteString(0,"BLE_GATTS_EVT_TIMEOUT \n");
             break;
 
         default:
@@ -357,6 +379,7 @@ static void ble_stack_init(void)
 
     // Register a handler for BLE events.
     NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
+    SEGGER_RTT_WriteString(0,"ble_stack_init() \n");
 }
 
 
@@ -370,6 +393,7 @@ void gatt_evt_handler(nrf_ble_gatt_t * p_gatt, nrf_ble_gatt_evt_t const * p_evt)
         m_ble_nus_max_data_len = p_evt->params.att_mtu_effective - OPCODE_LENGTH - HANDLE_LENGTH;
         NRF_LOG_INFO("Ble NUS max data length set to 0x%X(%d)", m_ble_nus_max_data_len, m_ble_nus_max_data_len);
     }
+    SEGGER_RTT_WriteString(0,"gatt_evt_handler() \n");
 }
 
 
@@ -383,6 +407,8 @@ void gatt_init(void)
 
     err_code = nrf_ble_gatt_att_mtu_central_set(&m_gatt, NRF_SDH_BLE_GATT_MAX_MTU_SIZE);
     APP_ERROR_CHECK(err_code);
+
+    SEGGER_RTT_WriteString(0,"gatt_init() \n");
 }
 
 
@@ -432,6 +458,7 @@ void gatt_init(void)
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
     app_error_handler(0xDEADBEEF, line_num, p_file_name);
+    SEGGER_RTT_WriteString(0,"assert_nrf_callback() \n");
 }
 
 /**@brief Function for handling database discovery events.
@@ -445,6 +472,7 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 static void db_disc_handler(ble_db_discovery_evt_t * p_evt)
 {
     ble_nus_c_on_db_disc_evt(&m_ble_nus_c, p_evt);
+    SEGGER_RTT_WriteString(0,"db_disc_handler() \n");
 }
 
 
@@ -484,6 +512,7 @@ static bool shutdown_handler(nrf_pwr_mgmt_evt_t event)
             // Prepare wakeup buttons.
             err_code = bsp_btn_ble_sleep_mode_prepare();
             APP_ERROR_CHECK(err_code);
+            SEGGER_RTT_WriteString(0,"NRF_PWR_MGMT_EVT_PREPARE_WAKEUP \n");
             break;
 
         default:
@@ -509,6 +538,7 @@ void bsp_event_handler(bsp_event_t event)
     {
         case BSP_EVENT_SLEEP:
             nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
+            SEGGER_RTT_WriteString(0,"BSP_EVENT_SLEEP \n");
             break;
 
         case BSP_EVENT_DISCONNECT:
@@ -518,6 +548,7 @@ void bsp_event_handler(bsp_event_t event)
             {
                 APP_ERROR_CHECK(err_code);
             }
+            SEGGER_RTT_WriteString(0,"BSP_EVENT_DISCONNECT\n");
             break;
 
         default:
@@ -567,8 +598,8 @@ static void log_init(void)
 {
     ret_code_t err_code = NRF_LOG_INIT(NULL);
     APP_ERROR_CHECK(err_code);
-
     NRF_LOG_DEFAULT_BACKENDS_INIT();
+    SEGGER_RTT_WriteString(0,"HELLO RAMON");
 }
 
 
@@ -601,6 +632,41 @@ static void idle_state_handle(void)
         nrf_pwr_mgmt_run();
     }
 }
+/*============================================================================================================
+ *
+ * 												END OF OTHER FUNCTIONS
+ *
+ =============================================================================================================*/
+
+void nvmcErase(void)
+{
+  if (NRF_UICR->REGOUT0 != UICR_REGOUT0_VOUT_3V3)
+  {
+      NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Een << NVMC_CONFIG_WEN_Pos;        //erase enable
+      while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+      NRF_NVMC->ERASEUICR = NVMC_ERASEUICR_ERASEUICR_Erase << NVMC_ERASEUICR_ERASEUICR_Pos;   //erase UICR
+      while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+      NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Ren << NVMC_CONFIG_WEN_Pos;  //read only enable
+      while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+  }
+}
+
+
+/**
+ * @brief Function for configuration of REGOUT0 register.
+ */
+void vddInit(void)
+{
+  if (NRF_UICR->REGOUT0 != UICR_REGOUT0_VOUT_3V3)
+  {
+	NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen << NVMC_CONFIG_WEN_Pos;    //write enable
+	while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+	NRF_UICR->REGOUT0 = UICR_REGOUT0_VOUT_3V3;                        //configurate REGOUT0
+	NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Ren << NVMC_CONFIG_WEN_Pos;
+	while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+        NVIC_SystemReset();                                               // Reset device
+  }
+}
 
 
 int main(void)
@@ -611,6 +677,7 @@ int main(void)
     buttons_leds_init();
     db_discovery_init();
     power_management_init();
+	SEGGER_RTT_Init();
     ble_stack_init();
     gatt_init();
     nus_c_init();
