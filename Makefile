@@ -47,6 +47,7 @@ SRC_FILES += \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c\
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c\
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power_clock.c\
+	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_power.c\
 	$(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c\
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c\
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c\
@@ -66,6 +67,13 @@ SRC_FILES += \
 	$(SDK_ROOT)/components/softdevice/common/nrf_sdh.c\
 	$(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c\
 	$(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c\
+	$(SDK_ROOT)/components/libraries/usbd/app_usbd.c\
+	$(SDK_ROOT)/components/libraries/usbd/app_usbd_core.c\
+	$(SDK_ROOT)/components/libraries/usbd/app_usbd_serial_num.c\
+	$(SDK_ROOT)/components/libraries/usbd/app_usbd_string_desc.c\
+	$(SDK_ROOT)/components/libraries/usbd/class/cdc/acm/app_usbd_cdc_acm.c\
+	$(SDK_ROOT)/components/drivers_nrf/usbd/nrf_drv_usbd.c\
+	$(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_power.c\
 #	$(SDK_ROOT)/utility/ble/ble_m.c\
 #	$(SDK_ROOT)/utility/ble/cli_m.c\
 
@@ -197,11 +205,13 @@ INC_FOLDERS += \
 	$(SDK_ROOT)/components/softdevice/s140/headers\
 	$(SDK_ROOT)/components/softdevice/s140/headers/nrf52\
 	$(SDK_ROOT)/components/toolchain/cmsis/include\
+	$(SDK_ROOT)/components/drivers_nrf/usbd\
 	$(SDK_ROOT)/external/fprintf\
 	$(SDK_ROOT)/external/segger_rtt\
 	$(SDK_ROOT)/external/utf_converter\
 	$(SDK_ROOT)/integration/nrfx\
 	$(SDK_ROOT)/integration/nrfx/legacy\
+	$(SDK_ROOT)/modules/nrfx/drivers/src\
 	$(SDK_ROOT)/modules/nrfx\
 	$(SDK_ROOT)/modules/nrfx/drivers/include\
 	$(SDK_ROOT)/modules/nrfx/hal\

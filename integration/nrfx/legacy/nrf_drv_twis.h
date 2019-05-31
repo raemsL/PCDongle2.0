@@ -37,98 +37,93 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef NRF_DRV_GPIOTE_H__
-#define NRF_DRV_GPIOTE_H__
 
-#include <nrfx_gpiote.h>
+#ifndef NRF_DRV_TWIS_H__
+#define NRF_DRV_TWIS_H__
+
+#include <nrfx_twis.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup nrf_drv_gpiote GPIOTE driver - legacy layer
+ * @defgroup nrf_drv_twis TWIS driver - legacy layer
  * @{
- * @ingroup nrf_gpiote
- * @brief Layer providing compatibility with the former API.
+ * @ingroup  nrf_twis
+ *
+ * @brief    Layer providing compatibility with the former API.
  */
 
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_in_config_t nrf_drv_gpiote_in_config_t;
+typedef nrfx_twis_t         nrf_drv_twis_t;
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_pin_t nrf_drv_gpiote_pin_t;
+typedef nrfx_twis_config_t  nrf_drv_twis_config_t;
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_out_config_t nrf_drv_gpiote_out_config_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
+typedef nrfx_twis_evt_t     nrf_drv_twis_evt_t;
 
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_LOTOHI     NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI
+#define NRF_DRV_TWIS_INSTANCE               NRFX_TWIS_INSTANCE
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_HITOLO     NRFX_GPIOTE_CONFIG_IN_SENSE_HITOLO
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_TOGGLE     NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_SIMPLE          NRFX_GPIOTE_CONFIG_OUT_SIMPLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_LOW        NRFX_GPIOTE_CONFIG_OUT_TASK_LOW
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_HIGH       NRFX_GPIOTE_CONFIG_OUT_TASK_HIGH
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_TOGGLE     NRFX_GPIOTE_CONFIG_OUT_TASK_TOGGLE
+#define NRF_DRV_TWIS_DEFAULT_CONFIG         NRFX_TWIS_DEFAULT_CONFIG
 
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_init               nrfx_gpiote_init
+#define TWIS_EVT_READ_REQ                   NRFX_TWIS_EVT_READ_REQ
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_is_init            nrfx_gpiote_is_init
+#define TWIS_EVT_READ_DONE                  NRFX_TWIS_EVT_READ_DONE
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_uninit             nrfx_gpiote_uninit
+#define TWIS_EVT_READ_ERROR                 NRFX_TWIS_EVT_READ_ERROR
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_init           nrfx_gpiote_out_init
+#define TWIS_EVT_WRITE_REQ                  NRFX_TWIS_EVT_WRITE_REQ
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_uninit         nrfx_gpiote_out_uninit
+#define TWIS_EVT_WRITE_DONE                 NRFX_TWIS_EVT_WRITE_DONE
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_set            nrfx_gpiote_out_set
+#define TWIS_EVT_WRITE_ERROR                NRFX_TWIS_EVT_WRITE_ERROR
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_clear          nrfx_gpiote_out_clear
+#define TWIS_EVT_GENERAL_ERROR              NRFX_TWIS_EVT_GENERAL_ERROR
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_toggle         nrfx_gpiote_out_toggle
+#define nrf_drv_twis_evt_type_t             nrfx_twis_evt_type_t
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_enable    nrfx_gpiote_out_task_enable
+#define NRF_DRV_TWIS_ERROR_OVERFLOW         NRFX_TWIS_ERROR_OVERFLOW
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_disable   nrfx_gpiote_out_task_disable
+#define NRF_DRV_TWIS_ERROR_DATA_NACK        NRFX_TWIS_ERROR_DATA_NACK
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_addr_get  nrfx_gpiote_out_task_addr_get
+#define NRF_DRV_TWIS_ERROR_OVERREAD         NRFX_TWIS_ERROR_OVERREAD
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_init            nrfx_gpiote_in_init
+#define NRF_DRV_TWIS_ERROR_UNEXPECTED_EVENT NRFX_TWIS_ERROR_UNEXPECTED_EVENT
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_uninit          nrfx_gpiote_in_uninit
+#define nrf_drv_twis_error_t                nrfx_twis_error_t
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_enable    nrfx_gpiote_in_event_enable
+#define nrf_drv_twis_event_handler_t        nrfx_twis_event_handler_t
+
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_disable   nrfx_gpiote_in_event_disable
+#define nrf_drv_twis_init                   nrfx_twis_init
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_is_set          nrfx_gpiote_in_is_set
+#define nrf_drv_twis_uninit                 nrfx_twis_uninit
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_addr_get  nrfx_gpiote_in_event_addr_get
+#define nrf_drv_twis_enable                 nrfx_twis_enable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_addr_get  nrfx_gpiote_set_task_addr_get
+#define nrf_drv_twis_disable                nrfx_twis_disable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_addr_get  nrfx_gpiote_clr_task_addr_get
+#define nrf_drv_twis_error_get_and_clear    nrfx_twis_error_get_and_clear
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_force     nrfx_gpiote_out_task_force
+#define nrf_drv_twis_tx_prepare             nrfx_twis_tx_prepare
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_trigger   nrfx_gpiote_out_task_trigger
+#define nrf_drv_twis_tx_amount              nrfx_twis_tx_amount
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_trigger   nrfx_gpiote_set_task_trigger
+#define nrf_drv_twis_rx_prepare             nrfx_twis_rx_prepare
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_trigger   nrfx_gpiote_clr_task_trigger
+#define nrf_drv_twis_rx_amount              nrfx_twis_rx_amount
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_twis_is_busy                nrfx_twis_is_busy
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_twis_is_waiting_tx_buff     nrfx_twis_is_waiting_tx_buff
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_twis_is_waiting_rx_buff     nrfx_twis_is_waiting_rx_buff
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_twis_is_pending_tx          nrfx_twis_is_pending_tx
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_twis_is_pending_rx          nrfx_twis_is_pending_rx
 
 /** @} */
 
@@ -136,4 +131,4 @@ typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
 }
 #endif
 
-#endif //NRF_DRV_GPIOTE_H__
+#endif // NRF_DRV_TWIS_H__

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2014 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -38,16 +38,45 @@
  *
  */
 
-#include <nrfx.h>
-#include <nrfx_power.h>
-#include <nrfx_clock.h>
-#include <nrfx_power_clock.h>
-#include "sdk_config.h"
+#ifndef NRF_DRV_LPCOMP_H__
+#define NRF_DRV_LPCOMP_H__
 
-#if NRFX_CHECK(NRFX_POWER_ENABLED) && NRFX_CHECK(NRFX_CLOCK_ENABLED)
-//void nrfx_power_clock_irq_handler(void)
-//{
-//    nrfx_power_irq_handler();
-//    nrfx_clock_irq_handler();
-//}
+#include <nrfx_lpcomp.h>
+
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+/**
+ * @defgroup nrf_drv_lpcomp LPCOMP driver - legacy layer
+ * @{
+ * @ingroup  nrf_lpcomp
+ *
+ * @brief    Layer providing compatibility with the former API.
+ */
+
+/** @brief Type definition for forwarding the new implementation. */
+typedef nrfx_lpcomp_config_t    nrf_drv_lpcomp_config_t;
+
+/** @brief Macro for forwarding the new implementation. */
+#define NRF_DRV_LPCOMP_DEFAULT_CONFIG   NRFX_LPCOMP_DEFAULT_CONFIG
+
+/** @brief Macro for forwarding the new implementation. */
+#define lpcomp_events_handler_t         nrfx_lpcomp_event_handler_t
+
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_lpcomp_init             nrfx_lpcomp_init
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_lpcomp_uninit           nrfx_lpcomp_uninit
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_lpcomp_enable           nrfx_lpcomp_enable
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_lpcomp_disable          nrfx_lpcomp_disable
+
+/** @} */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // NRF_DRV_LPCOMP_H__

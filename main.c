@@ -42,7 +42,7 @@
 #include <stdbool.h>
 #include "nordic_common.h"
 #include "app_error.h"
-#include "app_uart.h"
+
 #include "ble_db_discovery.h"
 #include "app_timer.h"
 #include "app_util.h"
@@ -58,10 +58,22 @@
 #include "nrf_pwr_mgmt.h"
 #include "nrf_ble_scan.h"
 
+#include "nrf_drv_power.h"
+#include "nrf_drv_clock.h"
+
+#include "app_usbd.h"
+#include "app_usbd_cdc_acm.h"
+#include "app_usbd_serial_num.h"
+#include "app_usbd_core.h"
+
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 #include "SEGGER_RTT.h"
+
+/*===============================================================================================================
+*								BLUETOOTH LOW ENERGY CENTRAL DEFINITIONS
+================================================================================================================*/
 
 #define APP_BLE_CONN_CFG_TAG    1                                       /**< Tag that refers to the BLE stack configuration set with @ref sd_ble_cfg_set. The default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
 #define APP_BLE_OBSERVER_PRIO   3                                       /**< BLE observer priority of the application. There is no need to modify this value. */
@@ -84,7 +96,51 @@ static ble_uuid_t const m_nus_uuid =
     .type = NUS_SERVICE_UUID_TYPE,
     .uuid = BLE_UUID_NUS_SERVICE
 };
+/*===============================================================================================================
+*										USBD CDC ACM DEFINITIONS
+================================================================================================================*/
+#define BTN_CDC_DATA_SEND       0
+#define BTN_CDC_NOTIFY_SEND     1
 
+#define BTN_CDC_DATA_KEY_RELEASE        (bsp_event_t)(BSP_EVENT_KEY_LAST + 1)
+
+/**
+ * @brief Enable power USB detection
+ *
+ * Configure if example supports USB port connection
+ */
+#ifndef USBD_POWER_DETECTION
+#define USBD_POWER_DETECTION true
+#endif
+
+static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
+                                    app_usbd_cdc_acm_user_event_t event);
+
+#define CDC_ACM_COMM_INTERFACE  0
+#define CDC_ACM_COMM_EPIN       NRF_DRV_USBD_EPIN2
+
+#define CDC_ACM_DATA_INTERFACE  1
+#define CDC_ACM_DATA_EPIN       NRF_DRV_USBD_EPIN1
+#define CDC_ACM_DATA_EPOUT      NRF_DRV_USBD_EPOUT1
+
+/**
+ * @brief CDC_ACM class instance
+ * */
+APP_USBD_CDC_ACM_GLOBAL_DEF(m_app_cdc_acm,
+                            cdc_acm_user_ev_handler,
+                            CDC_ACM_COMM_INTERFACE,
+                            CDC_ACM_DATA_INTERFACE,
+                            CDC_ACM_COMM_EPIN,
+                            CDC_ACM_DATA_EPIN,
+                            CDC_ACM_DATA_EPOUT,
+                            APP_USBD_CDC_COMM_PROTOCOL_AT_V250
+);
+
+#define READ_SIZE 1
+
+static char m_rx_buffer[READ_SIZE];
+static char m_tx_buffer[NRF_DRV_USBD_EPSIZE];
+static bool m_send_flag = 0;
 
 /*===============================================================================================================
 *
@@ -439,9 +495,47 @@ void gatt_init(void)
 *
 ================================================================================================================*/
 
+static bool m_usb_connected = false;
 
 
+/** @brief User event handler @ref app_usbd_cdc_acm_user_ev_handler_t */
+static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
+                                    app_usbd_cdc_acm_user_event_t event)
+{
+    app_usbd_cdc_acm_t const * p_cdc_acm = app_usbd_cdc_acm_class_get(p_inst);
+}
 
+static void usbd_user_ev_handler(app_usbd_event_type_t event)
+{
+    switch (event)
+    {
+        case APP_USBD_EVT_DRV_SUSPEND:
+            bsp_board_led_off(LEDR);
+            break;
+        case APP_USBD_EVT_DRV_RESUME:
+            bsp_board_led_on(LEDR);
+            break;
+        case APP_USBD_EVT_STARTED:
+            break;
+        case APP_USBD_EVT_STOPPED:
+            bsp_board_leds_off();
+            break;
+        case APP_USBD_EVT_POWER_DETECTED:
+            if (!nrf_drv_usbd_is_enabled())
+            {
+                app_usbd_enable();
+            }
+            break;
+        case APP_USBD_EVT_POWER_REMOVED:
+            m_usb_connected = false;
+            break;
+        case APP_USBD_EVT_POWER_READY:
+            m_usb_connected = true;
+            break;
+        default:
+            break;
+    }
+}
 
 /*===============================================================================================================
 *
@@ -612,6 +706,7 @@ static void log_init(void)
     ret_code_t err_code = NRF_LOG_INIT(NULL);
     APP_ERROR_CHECK(err_code);
     NRF_LOG_DEFAULT_BACKENDS_INIT();
+	SEGGER_RTT_Init();
     SEGGER_RTT_WriteString(0,"HELLO RAMON");
 }
 
@@ -684,17 +779,36 @@ void vddInit(void)
 
 int main(void)
 {
-    // Initialize.
+    ret_code_t ret;
+    static const app_usbd_config_t usbd_config = {
+        .ev_state_proc = usbd_user_ev_handler
+    };
+    ret = app_usbd_init(&usbd_config);
+    APP_ERROR_CHECK(ret);
+
     log_init();
+
+    ret = nrf_drv_clock_init();
+    APP_ERROR_CHECK(ret);
+
+    nrf_drv_clock_lfclk_request(NULL);
+
     timer_init();
     buttons_leds_init();
     db_discovery_init();
     power_management_init();
-	SEGGER_RTT_Init();
-    ble_stack_init();
+
+   app_usbd_serial_num_generate();
+
+   app_usbd_class_inst_t const * class_cdc_acm = app_usbd_cdc_acm_class_inst_get(&m_app_cdc_acm);
+   ret = app_usbd_class_append(class_cdc_acm);
+   APP_ERROR_CHECK(ret);
+
+   ble_stack_init();
     gatt_init();
     nus_c_init();
     scan_init();
+
 
     // Start execution.
    // printf("BLE UART central example started.\r\n");

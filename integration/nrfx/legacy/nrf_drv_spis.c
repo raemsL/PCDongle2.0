@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2018 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -38,16 +38,26 @@
  *
  */
 
-#include <nrfx.h>
-#include <nrfx_power.h>
-#include <nrfx_clock.h>
-#include <nrfx_power_clock.h>
-#include "sdk_config.h"
+#include "nrf_drv_spis.h"
 
-#if NRFX_CHECK(NRFX_POWER_ENABLED) && NRFX_CHECK(NRFX_CLOCK_ENABLED)
-//void nrfx_power_clock_irq_handler(void)
-//{
-//    nrfx_power_irq_handler();
-//    nrfx_clock_irq_handler();
-//}
-#endif
+static nrf_drv_spis_event_handler_t m_handlers[SPIS_COUNT];
+
+static void spis_event_handler(nrfx_spis_evt_t const * p_event,
+                               void *                  p_context)
+{
+    uint32_t inst_idx = (uint32_t)p_context;
+    m_handlers[inst_idx](*p_event);
+}
+
+ret_code_t nrf_drv_spis_init(nrf_drv_spis_t const * const  p_instance,
+                             nrf_drv_spis_config_t const * p_config,
+                             nrf_drv_spis_event_handler_t  event_handler)
+{
+    uint32_t inst_idx = p_instance->drv_inst_idx;
+    m_handlers[inst_idx] = event_handler;
+
+    return nrfx_spis_init(p_instance,
+                          p_config,
+                          spis_event_handler,
+                          (void *)inst_idx);
+}

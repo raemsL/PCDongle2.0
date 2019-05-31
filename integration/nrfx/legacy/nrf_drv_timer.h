@@ -37,98 +37,80 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef NRF_DRV_GPIOTE_H__
-#define NRF_DRV_GPIOTE_H__
 
-#include <nrfx_gpiote.h>
+#ifndef NRF_DRV_TIMER_H__
+#define NRF_DRV_TIMER_H__
+
+#include <nrfx_timer.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup nrf_drv_gpiote GPIOTE driver - legacy layer
+ * @defgroup nrf_drv_timer TIMER driver - legacy layer
  * @{
- * @ingroup nrf_gpiote
- * @brief Layer providing compatibility with the former API.
+ * @ingroup  nrf_timer
+ *
+ * @brief    Layer providing compatibility with the former API.
  */
 
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_in_config_t nrf_drv_gpiote_in_config_t;
+typedef nrfx_timer_t        nrf_drv_timer_t;
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_pin_t nrf_drv_gpiote_pin_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_out_config_t nrf_drv_gpiote_out_config_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
+typedef nrfx_timer_config_t nrf_drv_timer_config_t;
 
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_LOTOHI     NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI
+#define NRF_DRV_TIMER_INSTANCE                   NRFX_TIMER_INSTANCE
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_HITOLO     NRFX_GPIOTE_CONFIG_IN_SENSE_HITOLO
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_TOGGLE     NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_SIMPLE          NRFX_GPIOTE_CONFIG_OUT_SIMPLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_LOW        NRFX_GPIOTE_CONFIG_OUT_TASK_LOW
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_HIGH       NRFX_GPIOTE_CONFIG_OUT_TASK_HIGH
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_TOGGLE     NRFX_GPIOTE_CONFIG_OUT_TASK_TOGGLE
+#define NRF_DRV_TIMER_DEFAULT_CONFIG             NRFX_TIMER_DEFAULT_CONFIG
 
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_init               nrfx_gpiote_init
+#define nrf_timer_event_handler_t                nrfx_timer_event_handler_t
+
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_is_init            nrfx_gpiote_is_init
+#define nrf_drv_timer_init                       nrfx_timer_init
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_uninit             nrfx_gpiote_uninit
+#define nrf_drv_timer_uninit                     nrfx_timer_uninit
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_init           nrfx_gpiote_out_init
+#define nrf_drv_timer_enable                     nrfx_timer_enable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_uninit         nrfx_gpiote_out_uninit
+#define nrf_drv_timer_disable                    nrfx_timer_disable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_set            nrfx_gpiote_out_set
+#define nrf_drv_timer_is_enabled                 nrfx_timer_is_enabled
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_clear          nrfx_gpiote_out_clear
+#define nrf_drv_timer_pause                      nrfx_timer_pause
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_toggle         nrfx_gpiote_out_toggle
+#define nrf_drv_timer_resume                     nrfx_timer_resume
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_enable    nrfx_gpiote_out_task_enable
+#define nrf_drv_timer_clear                      nrfx_timer_clear
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_disable   nrfx_gpiote_out_task_disable
+#define nrf_drv_timer_increment                  nrfx_timer_increment
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_addr_get  nrfx_gpiote_out_task_addr_get
+#define nrf_drv_timer_capture                    nrfx_timer_capture
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_init            nrfx_gpiote_in_init
+#define nrf_drv_timer_capture_get                nrfx_timer_capture_get
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_uninit          nrfx_gpiote_in_uninit
+#define nrf_drv_timer_compare                    nrfx_timer_compare
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_enable    nrfx_gpiote_in_event_enable
+#define nrf_drv_timer_extended_compare           nrfx_timer_extended_compare
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_disable   nrfx_gpiote_in_event_disable
+#define nrf_drv_timer_us_to_ticks                nrfx_timer_us_to_ticks
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_is_set          nrfx_gpiote_in_is_set
+#define nrf_drv_timer_ms_to_ticks                nrfx_timer_ms_to_ticks
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_addr_get  nrfx_gpiote_in_event_addr_get
+#define nrf_drv_timer_compare_int_enable         nrfx_timer_compare_int_enable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_addr_get  nrfx_gpiote_set_task_addr_get
+#define nrf_drv_timer_compare_int_disable        nrfx_timer_compare_int_disable
+
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_addr_get  nrfx_gpiote_clr_task_addr_get
+#define nrf_drv_timer_task_address_get           nrfx_timer_task_address_get
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_force     nrfx_gpiote_out_task_force
+#define nrf_drv_timer_capture_task_address_get   nrfx_timer_capture_task_address_get
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_trigger   nrfx_gpiote_out_task_trigger
+#define nrf_drv_timer_event_address_get          nrfx_timer_event_address_get
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_trigger   nrfx_gpiote_set_task_trigger
-/** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_trigger   nrfx_gpiote_clr_task_trigger
+#define nrf_drv_timer_compare_event_address_get  nrfx_timer_compare_event_address_get
 
 /** @} */
 
@@ -136,4 +118,4 @@ typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
 }
 #endif
 
-#endif //NRF_DRV_GPIOTE_H__
+#endif // NRF_DRV_TIMER_H__

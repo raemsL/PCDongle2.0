@@ -38,11 +38,11 @@
  *
  */
 
+#include <nrfx_usbd.h>
 #include <nrfx.h>
 
 #if NRFX_CHECK(NRFX_USBD_ENABLED)
 
-#include <nrfx_usbd.h>
 #include "nrfx_usbd_errata.h"
 #include <nrfx_systick.h> /* Marker to delete when not required anymore: >> NRFX_USBD_ERRATA_ENABLE << */
 #include <string.h>

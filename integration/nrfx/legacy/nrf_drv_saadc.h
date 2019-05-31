@@ -37,98 +37,102 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef NRF_DRV_GPIOTE_H__
-#define NRF_DRV_GPIOTE_H__
 
-#include <nrfx_gpiote.h>
+#ifndef NRF_DRV_SAADC_H__
+#define NRF_DRV_SAADC_H__
+
+#include <nrfx_saadc.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup nrf_drv_gpiote GPIOTE driver - legacy layer
+ * @defgroup nrf_drv_saadc SAADC driver - legacy layer
  * @{
- * @ingroup nrf_gpiote
- * @brief Layer providing compatibility with the former API.
+ * @ingroup  nrf_saadc
+ *
+ * @brief    @tagAPI52 Layer providing compatibility with the former API.
  */
 
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_in_config_t nrf_drv_gpiote_in_config_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_pin_t nrf_drv_gpiote_pin_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_out_config_t nrf_drv_gpiote_out_config_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
+typedef nrfx_saadc_config_t nrf_drv_saadc_config_t;
 
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_LOTOHI     NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI
+#define NRF_DRV_SAADC_EVT_DONE          NRFX_SAADC_EVT_DONE
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_HITOLO     NRFX_GPIOTE_CONFIG_IN_SENSE_HITOLO
+#define NRF_DRV_SAADC_EVT_LIMIT         NRFX_SAADC_EVT_LIMIT
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_TOGGLE     NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE
+#define NRF_DRV_SAADC_EVT_CALIBRATEDONE NRFX_SAADC_EVT_CALIBRATEDONE
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI
+#define nrf_drv_saadc_evt_type_t        nrfx_saadc_evt_type_t
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO
+#define nrf_drv_saadc_done_evt_t        nrfx_saadc_done_evt_t
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE
+#define nrf_drv_saadc_limit_evt_t       nrfx_saadc_limit_evt_t
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_SIMPLE          NRFX_GPIOTE_CONFIG_OUT_SIMPLE
+#define nrf_drv_saadc_evt_t             nrfx_saadc_evt_t
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_LOW        NRFX_GPIOTE_CONFIG_OUT_TASK_LOW
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_HIGH       NRFX_GPIOTE_CONFIG_OUT_TASK_HIGH
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_TOGGLE     NRFX_GPIOTE_CONFIG_OUT_TASK_TOGGLE
+#define nrf_drv_saadc_event_handler_t   nrfx_saadc_event_handler_t
 
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_init               nrfx_gpiote_init
+#define NRF_DRV_SAADC_LIMITH_DISABLED   NRFX_SAADC_LIMITH_DISABLED
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_is_init            nrfx_gpiote_is_init
+#define NRF_DRV_SAADC_LIMITL_DISABLED   NRFX_SAADC_LIMITL_DISABLED
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_uninit             nrfx_gpiote_uninit
+#define NRF_DRV_SAADC_DEFAULT_CONFIG    NRFX_SAADC_DEFAULT_CONFIG
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_init           nrfx_gpiote_out_init
+#define NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE \
+        NRFX_SAADC_DEFAULT_CHANNEL_CONFIG_SE
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_uninit         nrfx_gpiote_out_uninit
+#define NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_DIFFERENTIAL \
+        NRFX_SAADC_DEFAULT_CHANNEL_CONFIG_DIFFERENTIAL
+
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_set            nrfx_gpiote_out_set
+#define nrf_drv_saadc_uninit            nrfx_saadc_uninit
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_clear          nrfx_gpiote_out_clear
+#define nrf_drv_saadc_channel_init      nrfx_saadc_channel_init
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_toggle         nrfx_gpiote_out_toggle
+#define nrf_drv_saadc_channel_uninit    nrfx_saadc_channel_uninit
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_enable    nrfx_gpiote_out_task_enable
+#define nrf_drv_saadc_sample            nrfx_saadc_sample
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_disable   nrfx_gpiote_out_task_disable
+#define nrf_drv_saadc_sample_convert    nrfx_saadc_sample_convert
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_addr_get  nrfx_gpiote_out_task_addr_get
+#define nrf_drv_saadc_buffer_convert    nrfx_saadc_buffer_convert
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_init            nrfx_gpiote_in_init
+#define nrf_drv_saadc_calibrate_offset  nrfx_saadc_calibrate_offset
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_uninit          nrfx_gpiote_in_uninit
+#define nrf_drv_saadc_is_busy           nrfx_saadc_is_busy
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_enable    nrfx_gpiote_in_event_enable
+#define nrf_drv_saadc_abort             nrfx_saadc_abort
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_disable   nrfx_gpiote_in_event_disable
+#define nrf_drv_saadc_limits_set        nrfx_saadc_limits_set
+
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_is_set          nrfx_gpiote_in_is_set
-/** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_addr_get  nrfx_gpiote_in_event_addr_get
-/** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_addr_get  nrfx_gpiote_set_task_addr_get
-/** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_addr_get  nrfx_gpiote_clr_task_addr_get
-/** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_force     nrfx_gpiote_out_task_force
-/** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_trigger   nrfx_gpiote_out_task_trigger
-/** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_trigger   nrfx_gpiote_set_task_trigger
-/** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_trigger   nrfx_gpiote_clr_task_trigger
+#define nrf_drv_saadc_sample_task_get   nrfx_saadc_sample_task_get
+
+/**
+ * @brief Function for initializing the SAADC.
+ *
+ * @param[in] p_config      Pointer to the structure with initial configuration.
+ *                          If NULL, the default one is used.
+ * @param[in] event_handler Event handler provided by the user.
+ *
+ * @retval NRF_SUCCESS If initialization was successful.
+ * @retval NRF_ERROR_INVALID_STATE If the driver is already initialized.
+ * @retval NRF_ERROR_INVALID_PARAM If event_handler is NULL.
+ */
+__STATIC_INLINE ret_code_t nrf_drv_saadc_init(nrf_drv_saadc_config_t const * p_config,
+                                              nrf_drv_saadc_event_handler_t  event_handler)
+{
+    if (p_config == NULL)
+    {
+        static const nrfx_saadc_config_t default_config = NRFX_SAADC_DEFAULT_CONFIG;
+        p_config = &default_config;
+    }
+    return nrfx_saadc_init(p_config, event_handler);
+}
 
 /** @} */
 
@@ -136,4 +140,4 @@ typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
 }
 #endif
 
-#endif //NRF_DRV_GPIOTE_H__
+#endif // NRF_DRV_SAADC_H__

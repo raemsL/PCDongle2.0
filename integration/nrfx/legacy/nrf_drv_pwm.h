@@ -37,98 +37,94 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef NRF_DRV_GPIOTE_H__
-#define NRF_DRV_GPIOTE_H__
 
-#include <nrfx_gpiote.h>
+#ifndef NRF_DRV_PWM_H__
+#define NRF_DRV_PWM_H__
+
+#include <nrfx_pwm.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup nrf_drv_gpiote GPIOTE driver - legacy layer
+ * @defgroup nrf_drv_pwm PWM driver - legacy layer
  * @{
- * @ingroup nrf_gpiote
- * @brief Layer providing compatibility with the former API.
+ * @ingroup  nrf_pwm
+ *
+ * @brief    @tagAPI52 Layer providing compatibility with the former API.
  */
 
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_in_config_t nrf_drv_gpiote_in_config_t;
+typedef nrfx_pwm_t          nrf_drv_pwm_t;
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_pin_t nrf_drv_gpiote_pin_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_out_config_t nrf_drv_gpiote_out_config_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
+typedef nrfx_pwm_config_t   nrf_drv_pwm_config_t;
 
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_LOTOHI     NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI
+#define NRF_DRV_PWM_INSTANCE                    NRFX_PWM_INSTANCE
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_HITOLO     NRFX_GPIOTE_CONFIG_IN_SENSE_HITOLO
+#define NRF_DRV_PWM_PIN_NOT_USED                NRFX_PWM_PIN_NOT_USED
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_TOGGLE     NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE
+#define NRF_DRV_PWM_PIN_INVERTED                NRFX_PWM_PIN_INVERTED
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_SIMPLE          NRFX_GPIOTE_CONFIG_OUT_SIMPLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_LOW        NRFX_GPIOTE_CONFIG_OUT_TASK_LOW
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_HIGH       NRFX_GPIOTE_CONFIG_OUT_TASK_HIGH
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_TOGGLE     NRFX_GPIOTE_CONFIG_OUT_TASK_TOGGLE
+#define NRF_DRV_PWM_DEFAULT_CONFIG              NRFX_PWM_DEFAULT_CONFIG
 
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_init               nrfx_gpiote_init
+#define NRF_DRV_PWM_FLAG_STOP                   NRFX_PWM_FLAG_STOP
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_is_init            nrfx_gpiote_is_init
+#define NRF_DRV_PWM_FLAG_LOOP                   NRFX_PWM_FLAG_LOOP
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_uninit             nrfx_gpiote_uninit
+#define NRF_DRV_PWM_FLAG_SIGNAL_END_SEQ0        NRFX_PWM_FLAG_SIGNAL_END_SEQ0
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_init           nrfx_gpiote_out_init
+#define NRF_DRV_PWM_FLAG_SIGNAL_END_SEQ1        NRFX_PWM_FLAG_SIGNAL_END_SEQ1
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_uninit         nrfx_gpiote_out_uninit
+#define NRF_DRV_PWM_FLAG_NO_EVT_FINISHED        NRFX_PWM_FLAG_NO_EVT_FINISHED
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_set            nrfx_gpiote_out_set
+#define NRF_DRV_PWM_FLAG_START_VIA_TASK         NRFX_PWM_FLAG_START_VIA_TASK
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_clear          nrfx_gpiote_out_clear
+#define nrf_drv_pwm_flag_t                      nrfx_pwm_flag_t
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_toggle         nrfx_gpiote_out_toggle
+#define NRF_DRV_PWM_EVT_FINISHED                NRFX_PWM_EVT_FINISHED
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_enable    nrfx_gpiote_out_task_enable
+#define NRF_DRV_PWM_EVT_END_SEQ0                NRFX_PWM_EVT_END_SEQ0
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_disable   nrfx_gpiote_out_task_disable
+#define NRF_DRV_PWM_EVT_END_SEQ1                NRFX_PWM_EVT_END_SEQ1
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_addr_get  nrfx_gpiote_out_task_addr_get
+#define NRF_DRV_PWM_EVT_STOPPED                 NRFX_PWM_EVT_STOPPED
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_init            nrfx_gpiote_in_init
+#define nrf_drv_pwm_evt_type_t                  nrfx_pwm_evt_type_t
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_uninit          nrfx_gpiote_in_uninit
+#define nrf_drv_pwm_handler_t                   nrfx_pwm_handler_t
+
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_enable    nrfx_gpiote_in_event_enable
+#define nrf_drv_pwm_init                        nrfx_pwm_init
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_disable   nrfx_gpiote_in_event_disable
+#define nrf_drv_pwm_uninit                      nrfx_pwm_uninit
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_is_set          nrfx_gpiote_in_is_set
+#define nrf_drv_pwm_simple_playback             nrfx_pwm_simple_playback
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_addr_get  nrfx_gpiote_in_event_addr_get
+#define nrf_drv_pwm_complex_playback            nrfx_pwm_complex_playback
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_addr_get  nrfx_gpiote_set_task_addr_get
+#define nrf_drv_pwm_step                        nrfx_pwm_step
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_addr_get  nrfx_gpiote_clr_task_addr_get
+#define nrf_drv_pwm_stop                        nrfx_pwm_stop
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_force     nrfx_gpiote_out_task_force
+#define nrf_drv_pwm_is_stopped                  nrfx_pwm_is_stopped
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_trigger   nrfx_gpiote_out_task_trigger
+#define nrf_drv_pwm_sequence_update             nrfx_pwm_sequence_update
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_trigger   nrfx_gpiote_set_task_trigger
+#define nrf_drv_pwm_sequence_values_update      nrfx_pwm_sequence_values_update
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_trigger   nrfx_gpiote_clr_task_trigger
+#define nrf_drv_pwm_sequence_length_update      nrfx_pwm_sequence_length_update
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_pwm_sequence_repeats_update     nrfx_pwm_sequence_repeats_update
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_pwm_sequence_end_delay_update   nrfx_pwm_sequence_end_delay_update
+
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_pwm_task_address_get            nrfx_pwm_task_address_get
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_pwm_event_address_get           nrfx_pwm_event_address_get
 
 /** @} */
 
@@ -136,4 +132,4 @@ typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
 }
 #endif
 
-#endif //NRF_DRV_GPIOTE_H__
+#endif // NRF_DRV_PWM_H__

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -38,16 +38,43 @@
  *
  */
 
-#include <nrfx.h>
-#include <nrfx_power.h>
-#include <nrfx_clock.h>
-#include <nrfx_power_clock.h>
-#include "sdk_config.h"
+#ifndef NRF_DRV_SYSTICK_H__
+#define NRF_DRV_SYSTICK_H__
 
-#if NRFX_CHECK(NRFX_POWER_ENABLED) && NRFX_CHECK(NRFX_CLOCK_ENABLED)
-//void nrfx_power_clock_irq_handler(void)
-//{
-//    nrfx_power_irq_handler();
-//    nrfx_clock_irq_handler();
-//}
+#include <nrfx_systick.h>
+
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+/**
+ * @defgroup   nrf_drv_systick ARM(R) SysTick driver - legacy layer
+ * @{
+ * @ingroup    nrf_systick
+ *
+ * @brief      Layer providing compatibility with the former API.
+ */
+
+/** @brief Type definition for forwarding the new implementation. */
+typedef nrfx_systick_state_t nrf_drv_systick_state_t;
+
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_systick_init        nrfx_systick_init
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_systick_get         nrfx_systick_get
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_systick_test        nrfx_systick_test
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_systick_delay_ticks nrfx_systick_delay_ticks
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_systick_delay_us    nrfx_systick_delay_us
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_systick_delay_ms    nrfx_systick_delay_ms
+
+/** @} */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // NRF_DRV_SYSTICK_H__

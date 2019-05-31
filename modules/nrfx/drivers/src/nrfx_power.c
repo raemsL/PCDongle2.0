@@ -39,7 +39,7 @@
  */
 
 #include <nrfx.h>
-
+#include "sdk_config.h"
 #if NRFX_CHECK(NRFX_POWER_ENABLED)
 
 #include <nrfx_power.h>

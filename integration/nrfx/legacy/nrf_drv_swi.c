@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -38,16 +38,29 @@
  *
  */
 
-#include <nrfx.h>
-#include <nrfx_power.h>
-#include <nrfx_clock.h>
-#include <nrfx_power_clock.h>
-#include "sdk_config.h"
+#include "nrf_drv_swi.h"
 
-#if NRFX_CHECK(NRFX_POWER_ENABLED) && NRFX_CHECK(NRFX_CLOCK_ENABLED)
-//void nrfx_power_clock_irq_handler(void)
-//{
-//    nrfx_power_irq_handler();
-//    nrfx_clock_irq_handler();
-//}
-#endif
+static nrfx_drv_state_t m_drv_state = NRFX_DRV_STATE_UNINITIALIZED;
+
+ret_code_t nrf_drv_swi_init(void)
+{
+    if (m_drv_state == NRFX_DRV_STATE_INITIALIZED)
+    {
+        return NRF_ERROR_MODULE_ALREADY_INITIALIZED;
+    }
+
+    m_drv_state = NRFX_DRV_STATE_INITIALIZED;
+    return NRF_SUCCESS;
+}
+
+ret_code_t nrf_drv_swi_uninit(void)
+{
+    if (m_drv_state == NRFX_DRV_STATE_UNINITIALIZED)
+    {
+        return NRF_ERROR_INVALID_STATE;
+    }
+
+    nrfx_swi_all_free();
+    m_drv_state = NRFX_DRV_STATE_UNINITIALIZED;
+    return NRF_SUCCESS;
+}

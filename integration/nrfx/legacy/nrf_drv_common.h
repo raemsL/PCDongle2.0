@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 - 2018, Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -38,16 +38,26 @@
  *
  */
 
-#include <nrfx.h>
-#include <nrfx_power.h>
-#include <nrfx_clock.h>
-#include <nrfx_power_clock.h>
-#include "sdk_config.h"
+#ifndef NRF_DRV_COMMON_H__
+#define NRF_DRV_COMMON_H__
 
-#if NRFX_CHECK(NRFX_POWER_ENABLED) && NRFX_CHECK(NRFX_CLOCK_ENABLED)
-//void nrfx_power_clock_irq_handler(void)
-//{
-//    nrfx_power_irq_handler();
-//    nrfx_clock_irq_handler();
-//}
+#include <nrfx.h>
+
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+#define INTERRUPT_PRIORITY_VALIDATION(pri) STATIC_ASSERT(INTERRUPT_PRIORITY_IS_VALID((pri)))
+#define INTERRUPT_PRIORITY_ASSERT(pri)     ASSERT(INTERRUPT_PRIORITY_IS_VALID((pri)))
+
+#define nrf_drv_irq_handler_t       nrfx_irq_handler_t
+#define nrf_drv_bitpos_to_event     nrfx_bitpos_to_event
+#define nrf_drv_event_to_bitpos     nrfx_event_to_bitpos
+#define nrf_drv_get_IRQn            nrfx_get_irq_number
+#define nrf_drv_is_in_RAM           nrfx_is_in_ram
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // NRF_DRV_COMMON_H__

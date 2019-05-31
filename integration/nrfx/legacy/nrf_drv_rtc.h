@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015 - 2019, Nordic Semiconductor ASA
+ * Copyright (c) 2014 - 2019, Nordic Semiconductor ASA
  *
  * All rights reserved.
  *
@@ -37,98 +37,88 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef NRF_DRV_GPIOTE_H__
-#define NRF_DRV_GPIOTE_H__
 
-#include <nrfx_gpiote.h>
+#ifndef NRF_DRV_RTC_H__
+#define NRF_DRV_RTC_H__
+
+#include <nrfx_rtc.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @defgroup nrf_drv_gpiote GPIOTE driver - legacy layer
+ * @defgroup nrf_drv_rtc RTC driver - legacy layer
  * @{
- * @ingroup nrf_gpiote
- * @brief Layer providing compatibility with the former API.
+ * @ingroup  nrf_rtc
+ *
+ * @brief    Layer providing compatibility with the former API.
  */
 
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_in_config_t nrf_drv_gpiote_in_config_t;
+typedef nrfx_rtc_t          nrf_drv_rtc_t;
 /** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_pin_t nrf_drv_gpiote_pin_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_out_config_t nrf_drv_gpiote_out_config_t;
-/** @brief Type definition for forwarding the new implementation. */
-typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
+typedef nrfx_rtc_config_t   nrf_drv_rtc_config_t;
 
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_LOTOHI     NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI
+#define NRF_DRV_RTC_INSTANCE            NRFX_RTC_INSTANCE
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_HITOLO     NRFX_GPIOTE_CONFIG_IN_SENSE_HITOLO
+#define NRF_DRV_RTC_DEFAULT_CONFIG      NRFX_RTC_DEFAULT_CONFIG
 /** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_IN_SENSE_TOGGLE     NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_LOTOHI
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_HITOLO
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE NRFX_GPIOTE_RAW_CONFIG_IN_SENSE_TOGGLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_SIMPLE          NRFX_GPIOTE_CONFIG_OUT_SIMPLE
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_LOW        NRFX_GPIOTE_CONFIG_OUT_TASK_LOW
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_HIGH       NRFX_GPIOTE_CONFIG_OUT_TASK_HIGH
-/** @brief Macro for forwarding the new implementation. */
-#define GPIOTE_CONFIG_OUT_TASK_TOGGLE     NRFX_GPIOTE_CONFIG_OUT_TASK_TOGGLE
+#define RTC_US_TO_TICKS                 NRFX_RTC_US_TO_TICKS
 
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_init               nrfx_gpiote_init
+#define NRF_DRV_RTC_INT_COMPARE0        NRFX_RTC_INT_COMPARE0
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_is_init            nrfx_gpiote_is_init
+#define NRF_DRV_RTC_INT_COMPARE1        NRFX_RTC_INT_COMPARE1
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_uninit             nrfx_gpiote_uninit
+#define NRF_DRV_RTC_INT_COMPARE2        NRFX_RTC_INT_COMPARE2
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_init           nrfx_gpiote_out_init
+#define NRF_DRV_RTC_INT_COMPARE3        NRFX_RTC_INT_COMPARE3
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_uninit         nrfx_gpiote_out_uninit
+#define NRF_DRV_RTC_INT_TICK            NRFX_RTC_INT_TICK
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_set            nrfx_gpiote_out_set
+#define NRF_DRV_RTC_INT_OVERFLOW        NRFX_RTC_INT_OVERFLOW
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_clear          nrfx_gpiote_out_clear
+#define nrf_drv_rtc_int_type_t          nrfx_rtc_int_type_t
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_toggle         nrfx_gpiote_out_toggle
+#define nrf_drv_rtc_handler_t           nrfx_rtc_handler_t
+
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_enable    nrfx_gpiote_out_task_enable
+#define nrf_drv_rtc_init                nrfx_rtc_init
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_disable   nrfx_gpiote_out_task_disable
+#define nrf_drv_rtc_uninit              nrfx_rtc_uninit
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_addr_get  nrfx_gpiote_out_task_addr_get
+#define nrf_drv_rtc_enable              nrfx_rtc_enable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_init            nrfx_gpiote_in_init
+#define nrf_drv_rtc_disable             nrfx_rtc_disable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_uninit          nrfx_gpiote_in_uninit
+#define nrf_drv_rtc_cc_set              nrfx_rtc_cc_set
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_enable    nrfx_gpiote_in_event_enable
+#define nrf_drv_rtc_cc_disable          nrfx_rtc_cc_disable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_disable   nrfx_gpiote_in_event_disable
+#define nrf_drv_rtc_tick_enable         nrfx_rtc_tick_enable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_is_set          nrfx_gpiote_in_is_set
+#define nrf_drv_rtc_tick_disable        nrfx_rtc_tick_disable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_in_event_addr_get  nrfx_gpiote_in_event_addr_get
+#define nrf_drv_rtc_overflow_enable     nrfx_rtc_overflow_enable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_addr_get  nrfx_gpiote_set_task_addr_get
+#define nrf_drv_rtc_overflow_disable    nrfx_rtc_overflow_disable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_addr_get  nrfx_gpiote_clr_task_addr_get
+#define nrf_drv_rtc_max_ticks_get       nrfx_rtc_max_ticks_get
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_force     nrfx_gpiote_out_task_force
+#define nrf_drv_rtc_int_disable         nrfx_rtc_int_disable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_out_task_trigger   nrfx_gpiote_out_task_trigger
+#define nrf_drv_rtc_int_enable          nrfx_rtc_int_enable
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_set_task_trigger   nrfx_gpiote_set_task_trigger
+#define nrf_drv_rtc_counter_get         nrfx_rtc_counter_get
 /** @brief Macro for forwarding the new implementation. */
-#define nrf_drv_gpiote_clr_task_trigger   nrfx_gpiote_clr_task_trigger
+#define nrf_drv_rtc_counter_clear       nrfx_rtc_counter_clear
+
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_rtc_task_address_get    nrfx_rtc_task_address_get
+/** @brief Macro for forwarding the new implementation. */
+#define nrf_drv_rtc_event_address_get   nrfx_rtc_event_address_get
 
 /** @} */
 
@@ -136,4 +126,4 @@ typedef nrfx_gpiote_evt_handler_t nrf_drv_gpiote_evt_handler_t;
 }
 #endif
 
-#endif //NRF_DRV_GPIOTE_H__
+#endif // NRF_DRV_RTC_H__
