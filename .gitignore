@@ -1,5 +1,7 @@
 
 *.txss
+*.bin
+*.in
 *.out
 *.o
 *.d

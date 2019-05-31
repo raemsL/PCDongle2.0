@@ -61,13 +61,10 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
-
+#include "SEGGER_RTT.h"
 
 #define APP_BLE_CONN_CFG_TAG    1                                       /**< Tag that refers to the BLE stack configuration set with @ref sd_ble_cfg_set. The default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
 #define APP_BLE_OBSERVER_PRIO   3                                       /**< BLE observer priority of the application. There is no need to modify this value. */
-
-#define UART_TX_BUF_SIZE        512                                     /**< UART TX buffer size. */
-#define UART_RX_BUF_SIZE        512                                     /**< UART RX buffer size. */
 
 #define NUS_SERVICE_UUID_TYPE   BLE_UUID_TYPE_VENDOR_BEGIN              /**< UUID type for the Nordic UART Service (vendor specific). */
 
@@ -84,27 +81,16 @@ static uint16_t m_ble_nus_max_data_len = BLE_GATT_ATT_MTU_DEFAULT - OPCODE_LENGT
 /**@brief NUS UUID. */
 static ble_uuid_t const m_nus_uuid =
 {
-    .uuid = BLE_UUID_NUS_SERVICE,
-    .type = NUS_SERVICE_UUID_TYPE
+    .type = NUS_SERVICE_UUID_TYPE,
+    .uuid = BLE_UUID_NUS_SERVICE
 };
 
 
-/**@brief Function for handling asserts in the SoftDevice.
- *
- * @details This function is called in case of an assert in the SoftDevice.
- *
- * @warning This handler is only an example and is not meant for the final product. You need to analyze
- *          how your product is supposed to react in case of assert.
- * @warning On assert from the SoftDevice, the system can only recover on reset.
- *
- * @param[in] line_num     Line number of the failing assert call.
- * @param[in] p_file_name  File name of the failing assert call.
- */
-void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
-{
-    app_error_handler(0xDEADBEEF, line_num, p_file_name);
-}
-
+/*===============================================================================================================
+*
+*								BLUETOOTH LOW ENERGY CENTRAL FUNCTIONS
+*
+================================================================================================================*/
 
 /**@brief Function for starting scanning. */
 static void scan_start(void)
@@ -116,8 +102,8 @@ static void scan_start(void)
 
     ret = bsp_indication_set(BSP_INDICATE_SCANNING);
     APP_ERROR_CHECK(ret);
-}
 
+}
 
 /**@brief Function for handling Scanning Module events.
  */
@@ -182,21 +168,6 @@ static void scan_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-
-/**@brief Function for handling database discovery events.
- *
- * @details This function is a callback function to handle events from the database discovery module.
- *          Depending on the UUIDs that are discovered, this function forwards the events
- *          to their respective services.
- *
- * @param[in] p_event  Pointer to the database discovery event.
- */
-static void db_disc_handler(ble_db_discovery_evt_t * p_evt)
-{
-    ble_nus_c_on_db_disc_evt(&m_ble_nus_c, p_evt);
-}
-
-
 /**@brief Function for handling characters received by the Nordic UART Service (NUS).
  *
  * @details This function takes a list of characters of length data_len and prints the characters out on UART.
@@ -241,60 +212,6 @@ static void ble_nus_chars_received_uart_print(uint8_t * p_data, uint16_t data_le
 }
 
 
-/**@brief   Function for handling app_uart events.
- *
- * @details This function receives a single character from the app_uart module and appends it to
- *          a string. The string is sent over BLE when the last character received is a
- *          'new line' '\n' (hex 0x0A) or if the string reaches the maximum data length.
- */
-void uart_event_handle(app_uart_evt_t * p_event)
-{
-    static uint8_t data_array[BLE_NUS_MAX_DATA_LEN];
-    static uint16_t index = 0;
-    uint32_t ret_val;
-
-    switch (p_event->evt_type)
-    {
-        /**@snippet [Handling data from UART] */
-        case APP_UART_DATA_READY:
-            UNUSED_VARIABLE(app_uart_get(&data_array[index]));
-            index++;
-
-            if ((data_array[index - 1] == '\n') || (index >= (m_ble_nus_max_data_len)))
-            {
-                NRF_LOG_DEBUG("Ready to send data over BLE NUS");
-                NRF_LOG_HEXDUMP_DEBUG(data_array, index);
-
-                do
-                {
-                    ret_val = ble_nus_c_string_send(&m_ble_nus_c, data_array, index);
-                    if ( (ret_val != NRF_ERROR_INVALID_STATE) && (ret_val != NRF_ERROR_RESOURCES) )
-                    {
-                        APP_ERROR_CHECK(ret_val);
-                    }
-                } while (ret_val == NRF_ERROR_RESOURCES);
-
-                index = 0;
-            }
-            break;
-
-        /**@snippet [Handling data from UART] */
-        case APP_UART_COMMUNICATION_ERROR:
-            NRF_LOG_ERROR("Communication error occurred while handling UART.");
-            APP_ERROR_HANDLER(p_event->data.error_communication);
-            break;
-
-        case APP_UART_FIFO_ERROR:
-            NRF_LOG_ERROR("Error occurred in FIFO module used by UART.");
-            APP_ERROR_HANDLER(p_event->data.error_code);
-            break;
-
-        default:
-            break;
-    }
-}
-
-
 /**@brief Callback handling Nordic UART Service (NUS) client events.
  *
  * @details This function is called to notify the application of NUS client events.
@@ -331,37 +248,6 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
     }
 }
 /**@snippet [Handling events from the ble_nus_c module] */
-
-
-/**
- * @brief Function for handling shutdown events.
- *
- * @param[in]   event       Shutdown type.
- */
-static bool shutdown_handler(nrf_pwr_mgmt_evt_t event)
-{
-    ret_code_t err_code;
-
-    err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-    APP_ERROR_CHECK(err_code);
-
-    switch (event)
-    {
-        case NRF_PWR_MGMT_EVT_PREPARE_WAKEUP:
-            // Prepare wakeup buttons.
-            err_code = bsp_btn_ble_sleep_mode_prepare();
-            APP_ERROR_CHECK(err_code);
-            break;
-
-        default:
-            break;
-    }
-
-    return true;
-}
-
-NRF_PWR_MGMT_HANDLER_REGISTER(shutdown_handler, APP_SHUTDOWN_HANDLER_PRIORITY);
-
 
 /**@brief Function for handling BLE events.
  *
@@ -500,6 +386,117 @@ void gatt_init(void)
 }
 
 
+/*===============================================================================================================
+*
+*								END OF BLUETOOTH LOW ENERGY CENTRAL FUNCTIONS
+*
+================================================================================================================*/
+
+
+
+/*===============================================================================================================
+*
+*									  BEGIN OF USBD CDC ACM FUNCTIONS
+*
+================================================================================================================*/
+
+
+
+
+
+/*===============================================================================================================
+*
+*									  END OF USBD CDC ACM FUNCTIONS
+*
+================================================================================================================*/
+
+
+
+/*===============================================================================================================
+*
+*									  BEGIN OF OTHER FUNCTIONS
+*
+================================================================================================================*/
+
+/**@brief Function for handling asserts in the SoftDevice.
+ *
+ * @details This function is called in case of an assert in the SoftDevice.
+ *
+ * @warning This handler is only an example and is not meant for the final product. You need to analyze
+ *          how your product is supposed to react in case of assert.
+ * @warning On assert from the SoftDevice, the system can only recover on reset.
+ *
+ * @param[in] line_num     Line number of the failing assert call.
+ * @param[in] p_file_name  File name of the failing assert call.
+ */
+void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
+{
+    app_error_handler(0xDEADBEEF, line_num, p_file_name);
+}
+
+/**@brief Function for handling database discovery events.
+ *
+ * @details This function is a callback function to handle events from the database discovery module.
+ *          Depending on the UUIDs that are discovered, this function forwards the events
+ *          to their respective services.
+ *
+ * @param[in] p_event  Pointer to the database discovery event.
+ */
+static void db_disc_handler(ble_db_discovery_evt_t * p_evt)
+{
+    ble_nus_c_on_db_disc_evt(&m_ble_nus_c, p_evt);
+}
+
+
+/*===============================================================================================================
+*		Hier war der UART HAndler Implementiert. Die übriggebliebene FUnktion war Teil davon.
+================================================================================================================*/
+/*
+    static uint8_t data_array[BLE_NUS_MAX_DATA_LEN];
+
+                    ret_val = ble_nus_c_string_send(&m_ble_nus_c, data_array, index);
+                    if ( (ret_val != NRF_ERROR_INVALID_STATE) && (ret_val != NRF_ERROR_RESOURCES) )
+                    {
+                        APP_ERROR_CHECK(ret_val);
+                    }
+*/
+/*===============================================================================================================
+*										END OF UART EVENT HANDLER
+================================================================================================================*/
+
+
+
+/**
+ * @brief Function for handling shutdown events.
+ *
+ * @param[in]   event       Shutdown type.
+ */
+static bool shutdown_handler(nrf_pwr_mgmt_evt_t event)
+{
+    ret_code_t err_code;
+
+    err_code = bsp_indication_set(BSP_INDICATE_IDLE);
+    APP_ERROR_CHECK(err_code);
+
+    switch (event)
+    {
+        case NRF_PWR_MGMT_EVT_PREPARE_WAKEUP:
+            // Prepare wakeup buttons.
+            err_code = bsp_btn_ble_sleep_mode_prepare();
+            APP_ERROR_CHECK(err_code);
+            break;
+
+        default:
+            break;
+    }
+
+    return true;
+}
+
+NRF_PWR_MGMT_HANDLER_REGISTER(shutdown_handler, APP_SHUTDOWN_HANDLER_PRIORITY);
+
+
+
 /**@brief Function for handling events from the BSP module.
  *
  * @param[in] event  Event generated by button press.
@@ -528,31 +525,7 @@ void bsp_event_handler(bsp_event_t event)
     }
 }
 
-/**@brief Function for initializing the UART. */
-static void uart_init(void)
-{
-    ret_code_t err_code;
 
-    app_uart_comm_params_t const comm_params =
-    {
-        .rx_pin_no    = RX_PIN_NUMBER,
-        .tx_pin_no    = TX_PIN_NUMBER,
-        .rts_pin_no   = RTS_PIN_NUMBER,
-        .cts_pin_no   = CTS_PIN_NUMBER,
-        .flow_control = APP_UART_FLOW_CONTROL_DISABLED,
-        .use_parity   = false,
-        .baud_rate    = UART_BAUDRATE_BAUDRATE_Baud115200
-    };
-
-    APP_UART_FIFO_INIT(&comm_params,
-                       UART_RX_BUF_SIZE,
-                       UART_TX_BUF_SIZE,
-                       uart_event_handle,
-                       APP_IRQ_PRIORITY_LOWEST,
-                       err_code);
-
-    APP_ERROR_CHECK(err_code);
-}
 
 /**@brief Function for initializing the Nordic UART Service (NUS) client. */
 static void nus_c_init(void)
@@ -635,7 +608,6 @@ int main(void)
     // Initialize.
     log_init();
     timer_init();
-    uart_init();
     buttons_leds_init();
     db_discovery_init();
     power_management_init();
