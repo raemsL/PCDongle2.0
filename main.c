@@ -893,6 +893,7 @@ void vddInit(void)
 int main(void)
 {
 	uint8_t arr = "hallllloooooooo";
+
     ret_code_t ret;
     static const app_usbd_config_t usbd_config = {
         .ev_state_proc = usbd_user_ev_handler
