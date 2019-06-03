@@ -73,7 +73,7 @@
 #include "SEGGER_RTT.h"
 
 
-
+unsigned char test[] = "Ich bin Ramon Loher \n";
 /*===============================================================================================================
 *								BLUETOOTH LOW ENERGY CENTRAL DEFINITIONS
 ================================================================================================================*/
@@ -83,7 +83,7 @@
 
 #define NUS_SERVICE_UUID_TYPE   BLE_UUID_TYPE_VENDOR_BEGIN              /**< UUID type for the Nordic UART Service (vendor specific). */
 
-#define ECHOBACK_BLE_UART_DATA  0                                       /**< Echo the UART data that is received over the Nordic UART Service (NUS) back to the sender. */
+#define ECHOBACK_BLE_UART_DATA  0	                                    /**< Echo the UART data that is received over the Nordic UART Service (NUS) back to the sender. */
 
 APP_TIMER_DEF(m_blink_ble);
 
@@ -232,7 +232,6 @@ static void scan_evt_handler(scan_evt_t const * p_scan_evt)
          case NRF_BLE_SCAN_EVT_SCAN_TIMEOUT:
          {
         	 bsp_board_led_off(LEDG2);
-             NRF_LOG_INFO("Scan timed out.");
              scan_start();
              SEGGER_RTT_WriteString(0,"NRF_BLE_SCAN_EVT_SCAN_TIMEOUT \n");
          } break;
@@ -263,6 +262,7 @@ static void scan_init(void)
 
     err_code = nrf_ble_scan_filters_enable(&m_scan, NRF_BLE_SCAN_UUID_FILTER, false);
     APP_ERROR_CHECK(err_code);
+
     SEGGER_RTT_WriteString(0,"scan_init() \n");
 }
 
@@ -274,43 +274,44 @@ static void scan_init(void)
 static void ble_nus_chars_received(uint8_t * p_data, uint16_t data_len)
 {
     ret_code_t ret_val = NRF_SUCCESS;
-
-    SEGGER_RTT_WriteString(0,"Receiving data.\n");
+    SEGGER_RTT_WriteString(0,"ble_nus_chars_received() \n");
     NRF_LOG_HEXDUMP_DEBUG(p_data, data_len);
 
-    for (uint32_t i = 0; i < data_len; i++)
-    {
-        do
-        {
-        	//////////////////////////////////////////////////////////////////////
-            // put the data to usbd. ====> (ret_val = app_uart_put(p_data[i]);)
-        	//////////////////////////////////////////////////////////////////////
-            if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
-            {
-            	SEGGER_RTT_printf(0,"app_uart_put failed for index 0x%04x.\n", i);
-                APP_ERROR_CHECK(ret_val);
-            }
-        } while (ret_val == NRF_ERROR_BUSY);
-    }
-    if (p_data[data_len-1] == '\r')
-    {
-    	//////////////////////////////////////////////////////////////////////
-        //while (app_uart_put('\n') == NRF_ERROR_BUSY);
-    	//////////////////////////////////////////////////////////////////////
-    }
-    if (ECHOBACK_BLE_UART_DATA)// ECHO ===> sends received data back to transmitter
-    {
-        // Send data back to the peripheral.
-        do
-        {
-            ret_val = ble_nus_c_string_send(&m_ble_nus_c, p_data, data_len);
-            if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
-            {
-            	SEGGER_RTT_printf(0,"Failed sending NUS message. Error 0x%x. \n", ret_val);
-                APP_ERROR_CHECK(ret_val);
-            }
-        } while (ret_val == NRF_ERROR_BUSY);
-    }
+
+	for (uint32_t i = 0; i < data_len; i++)
+	{
+		do
+		{
+			SEGGER_RTT_printf(0,"DATA[%d] : %02X \n",i, p_data[i]);
+			//////////////////////////////////////////////////////////////////////
+			// put the data to usbd. ====> (ret_val = app_uart_put(p_data[i]);)
+			//////////////////////////////////////////////////////////////////////
+			if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
+			{
+				SEGGER_RTT_printf(0,"app_uart_put failed for index 0x%04x.\n", i);
+				APP_ERROR_CHECK(ret_val);
+			}
+		} while (ret_val == NRF_ERROR_BUSY);
+		SEGGER_RTT_printf(0,"Length : %d \n ", data_len);
+	}
+	if (p_data[data_len-1] == '\r')
+	{
+
+	}
+	if (ECHOBACK_BLE_UART_DATA)// ECHO ===> sends received data back to transmitter
+	{
+		// Send data back to the peripheral.
+		do
+		{
+			ret_val = ble_nus_c_string_send(&m_ble_nus_c, test, sizeof(test));
+			if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
+			{
+				SEGGER_RTT_printf(0,"Failed sending NUS message. Error 0x%x. \n", ret_val);
+				APP_ERROR_CHECK(ret_val);
+			}
+		} while (ret_val == NRF_ERROR_BUSY);
+	}
+
     SEGGER_RTT_WriteString(0,"ble_nus_chars_received_uart_print() \n");
 }
 
@@ -327,29 +328,29 @@ static void ble_nus_chars_received(uint8_t * p_data, uint16_t data_len)
 static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t const * p_ble_nus_evt)
 {
     ret_code_t err_code;
-
+    SEGGER_RTT_WriteString(0,"ble_nus_c_evt_handler() \n");
     switch (p_ble_nus_evt->evt_type)
     {
         case BLE_NUS_C_EVT_DISCOVERY_COMPLETE:
-        	SEGGER_RTT_WriteString(0,"Discovery complete.");
+        	SEGGER_RTT_WriteString(0,"Discovery complete. \n");
             err_code = ble_nus_c_handles_assign(p_ble_nus_c, p_ble_nus_evt->conn_handle, &p_ble_nus_evt->handles);
             APP_ERROR_CHECK(err_code);
 
             err_code = ble_nus_c_tx_notif_enable(p_ble_nus_c);
             APP_ERROR_CHECK(err_code);
-            NRF_LOG_INFO("Connected to device with Nordic UART Service.");
+            SEGGER_RTT_WriteString(0,"Connected to device with Nordic UART Service.\n");
             SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_DISCOVERY_COMPLETE \n");
             break;
 
         case BLE_NUS_C_EVT_NUS_TX_EVT:
             SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_NUS_TX_EVT \n");
         	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////<=============
-            ble_nus_chars_received(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
+//            ble_nus_chars_received(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////<=============
+
             break;
 
         case BLE_NUS_C_EVT_DISCONNECTED:
-            NRF_LOG_INFO("Disconnected.");
             scan_start();
             SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_DISCONNECTED \n");
             break;
@@ -364,6 +365,7 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
  */
 static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 {
+    SEGGER_RTT_WriteString(0,"ble_evt_handler() \n");
     ret_code_t            err_code;
     ble_gap_evt_t const * p_gap_evt = &p_ble_evt->evt.gap_evt;
 
@@ -386,7 +388,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 
         case BLE_GAP_EVT_DISCONNECTED:
         	bsp_board_led_off(LEDG2);
-        	SEGGER_RTT_printf(0,"Disconnected. conn_handle: 0x%x, reason: 0x%x",
+        	SEGGER_RTT_printf(0,"Disconnected. conn_handle: 0x%x, reason: 0x%x \n",
                          p_gap_evt->conn_handle,
                          p_gap_evt->params.disconnected.reason);
         	connectedF = false;
@@ -490,6 +492,7 @@ static void ble_stack_init(void)
 /**@brief Function for handling events from the GATT library. */
 void gatt_evt_handler(nrf_ble_gatt_t * p_gatt, nrf_ble_gatt_evt_t const * p_evt)
 {
+    SEGGER_RTT_WriteString(0,"gatt_evt_handler() \n");
     if (p_evt->evt_id == NRF_BLE_GATT_EVT_ATT_MTU_UPDATED)
     {
     	SEGGER_RTT_WriteString(0,"ATT MTU exchange completed.");
@@ -497,7 +500,7 @@ void gatt_evt_handler(nrf_ble_gatt_t * p_gatt, nrf_ble_gatt_evt_t const * p_evt)
         m_ble_nus_max_data_len = p_evt->params.att_mtu_effective - OPCODE_LENGTH - HANDLE_LENGTH;
         SEGGER_RTT_printf(0,"Ble NUS max data length set to 0x%X(%d)", m_ble_nus_max_data_len, m_ble_nus_max_data_len);
     }
-    SEGGER_RTT_WriteString(0,"gatt_evt_handler() \n");
+
 }
 
 
@@ -790,8 +793,8 @@ static void buttons_leds_init(void)
     err_code = bsp_init(BSP_INIT_LEDS, bsp_event_handler);
     APP_ERROR_CHECK(err_code);
 
-    err_code = bsp_init(BSP_INIT_BUTTONS, bsp_event_handler);
-    APP_ERROR_CHECK(err_code);
+//    err_code = bsp_init(BSP_INIT_BUTTONS, bsp_event_handler);
+//    APP_ERROR_CHECK(err_code);
 
     err_code = bsp_btn_ble_init(NULL, &startup_event);
     APP_ERROR_CHECK(err_code);
@@ -905,14 +908,14 @@ int main(void)
 	uint8_t arr[30] = {0xFF, 0x00, 0xFF, 0x52, 0xAD, 0x55, 0x33, 0xFF, 0x00, 0xFF,
 					0xFF, 0x00, 0xFF, 0x52, 0xAD, 0x55, 0x33, 0xFF, 0x00, 0xFF,
 					0xFF, 0x00, 0xFF, 0x52, 0xAD, 0x55, 0x33, 0xFF, 0x00, 0xFF};
-	unsigned char test[] = "Ich bin Ramon Loher \n";
+
 
     ret_code_t ret = NRF_SUCCESS;
     uint32_t ret_value = NRF_SUCCESS;
     static const app_usbd_config_t usbd_config = {
         .ev_state_proc = usbd_user_ev_handler
     };
-    ret = app_usbd_init(&usbd_config);
+//    ret = app_usbd_init(&usbd_config);
     APP_ERROR_CHECK(ret);
 
     log_init();
@@ -932,12 +935,12 @@ int main(void)
     db_discovery_init();
     power_management_init();
 
-    app_usbd_serial_num_generate();
+//    app_usbd_serial_num_generate();
 
   //  The created instance is added to the USBD library
-    app_usbd_class_inst_t const * class_cdc_acm = app_usbd_cdc_acm_class_inst_get(&m_app_cdc_acm);
-    ret = app_usbd_class_append(class_cdc_acm);
-    APP_ERROR_CHECK(ret);
+//    app_usbd_class_inst_t const * class_cdc_acm = app_usbd_cdc_acm_class_inst_get(&m_app_cdc_acm);
+//    ret = app_usbd_class_append(class_cdc_acm);
+//    APP_ERROR_CHECK(ret);
 
     SEGGER_RTT_WriteString(0, "HALLO RAMON \n");
    	ble_stack_init();
@@ -945,43 +948,30 @@ int main(void)
 	nus_c_init();
 	scan_init();
 
-//    scan_start();
+    scan_start();
 
-    if (USBD_POWER_DETECTION)
-    {
-        ret = app_usbd_power_events_enable();
-        APP_ERROR_CHECK(ret);
-    }
-
-//    while(!connectedF){
-//
+//    if (USBD_POWER_DETECTION)
+//    {
+//        ret = app_usbd_power_events_enable();
+//        APP_ERROR_CHECK(ret);
 //    }
+
+    while(!connectedF){
+
+    }
     // Enter main loop.
 		for (;;)
 		{
+//			while (app_usbd_event_queue_process())
+//			{
+//				nrf_delay_ms(250);
+//				ret = app_usbd_cdc_acm_write(&m_app_cdc_acm,(void *)test,sizeof(test));
+//				if ((ret != NRF_SUCCESS) && (ret != NRF_ERROR_BUSY))
+//					{
+//						SEGGER_RTT_printf(0,"Failed app_usbd_cdc_acm_write. Error 0x%x. \n", ret);
+//					}
+//			}
 
-			if(bsp_board_button_state_get(BUTTON_1)){
-
-				ret_value = ble_nus_c_string_send(&m_ble_nus_c, test, sizeof(test));
-				nrf_delay_ms(100);
-						if ((ret_value != NRF_SUCCESS) && (ret_value != NRF_ERROR_BUSY))
-						{
-							SEGGER_RTT_printf(0,"Failed sending NUS message. Error 0x%x. \n", ret_value);
-//							APP_ERROR_CHECK(ret_value);
-						}
-
-			nrf_delay_ms(100);
-			}
-			while (app_usbd_event_queue_process())
-			{
-				nrf_delay_ms(250);
-				ret = app_usbd_cdc_acm_write(&m_app_cdc_acm,(void *)test,sizeof(test));
-				if ((ret != NRF_SUCCESS) && (ret != NRF_ERROR_BUSY))
-					{
-						SEGGER_RTT_printf(0,"Failed app_usbd_cdc_acm_write. Error 0x%x. \n", ret);
-					}
-			}
-
-			//idle_state_handle();
+			idle_state_handle();
 		}
 }
