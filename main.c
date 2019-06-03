@@ -42,6 +42,7 @@
 #include <stdbool.h>
 #include "nordic_common.h"
 #include "app_error.h"
+#include "nrf_delay.h"
 
 #include "ble_db_discovery.h"
 #include "app_timer.h"
@@ -99,6 +100,8 @@ static ble_uuid_t const m_nus_uuid =
     .type = NUS_SERVICE_UUID_TYPE,
     .uuid = BLE_UUID_NUS_SERVICE
 };
+
+static bool connectedF = false;
 /*===============================================================================================================
 *								  END OF BLUETOOTH LOW ENERGY CENTRAL DEFINITIONS
 ================================================================================================================*/
@@ -328,7 +331,7 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
     switch (p_ble_nus_evt->evt_type)
     {
         case BLE_NUS_C_EVT_DISCOVERY_COMPLETE:
-            NRF_LOG_INFO("Discovery complete.");
+        	SEGGER_RTT_WriteString(0,"Discovery complete.");
             err_code = ble_nus_c_handles_assign(p_ble_nus_c, p_ble_nus_evt->conn_handle, &p_ble_nus_evt->handles);
             APP_ERROR_CHECK(err_code);
 
@@ -339,10 +342,10 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
             break;
 
         case BLE_NUS_C_EVT_NUS_TX_EVT:
+            SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_NUS_TX_EVT \n");
         	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////<=============
             ble_nus_chars_received(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////<=============
-            SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_NUS_TX_EVT \n");
             break;
 
         case BLE_NUS_C_EVT_DISCONNECTED:
@@ -376,6 +379,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             // start discovery of services. The NUS Client waits for a discovery result
             err_code = ble_db_discovery_start(&m_db_disc, p_ble_evt->evt.gap_evt.conn_handle);
             APP_ERROR_CHECK(err_code);
+            connectedF = true;
             bsp_board_led_on(LEDG2);
             SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_CONNECTED \n");
             break;
@@ -385,6 +389,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
         	SEGGER_RTT_printf(0,"Disconnected. conn_handle: 0x%x, reason: 0x%x",
                          p_gap_evt->conn_handle,
                          p_gap_evt->params.disconnected.reason);
+        	connectedF = false;
             SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_DISCONNECTED \n");
             break;
 
@@ -398,7 +403,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
         case BLE_GAP_EVT_TIMEOUT:
             if (p_gap_evt->params.timeout.src == BLE_GAP_TIMEOUT_SRC_CONN)
             {
-                NRF_LOG_INFO("Connection Request timed out.");
+            	SEGGER_RTT_WriteString(0,"Connection Request timed out.");
             }
             SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_TIMEOUT \n");
             break;
@@ -785,6 +790,9 @@ static void buttons_leds_init(void)
     err_code = bsp_init(BSP_INIT_LEDS, bsp_event_handler);
     APP_ERROR_CHECK(err_code);
 
+    err_code = bsp_init(BSP_INIT_BUTTONS, bsp_event_handler);
+    APP_ERROR_CHECK(err_code);
+
     err_code = bsp_btn_ble_init(NULL, &startup_event);
     APP_ERROR_CHECK(err_code);
 }
@@ -892,9 +900,15 @@ void vddInit(void)
 
 int main(void)
 {
-	uint8_t arr = "hallllloooooooo";
+    nvmcErase();
+    vddInit();
+	uint8_t arr[30] = {0xFF, 0x00, 0xFF, 0x52, 0xAD, 0x55, 0x33, 0xFF, 0x00, 0xFF,
+					0xFF, 0x00, 0xFF, 0x52, 0xAD, 0x55, 0x33, 0xFF, 0x00, 0xFF,
+					0xFF, 0x00, 0xFF, 0x52, 0xAD, 0x55, 0x33, 0xFF, 0x00, 0xFF};
+	unsigned char test[] = "Ich bin Ramon Loher \n";
 
-    ret_code_t ret;
+    ret_code_t ret = NRF_SUCCESS;
+    uint32_t ret_value = NRF_SUCCESS;
     static const app_usbd_config_t usbd_config = {
         .ev_state_proc = usbd_user_ev_handler
     };
@@ -920,17 +934,17 @@ int main(void)
 
     app_usbd_serial_num_generate();
 
-    //The created instance is added to the USBD library
+  //  The created instance is added to the USBD library
     app_usbd_class_inst_t const * class_cdc_acm = app_usbd_cdc_acm_class_inst_get(&m_app_cdc_acm);
     ret = app_usbd_class_append(class_cdc_acm);
     APP_ERROR_CHECK(ret);
 
+    SEGGER_RTT_WriteString(0, "HALLO RAMON \n");
+   	ble_stack_init();
+	gatt_init();
+	nus_c_init();
+	scan_init();
 
-//   	ble_stack_init();
-//	gatt_init();
-//	nus_c_init();
-//	scan_init();
-//
 //    scan_start();
 
     if (USBD_POWER_DETECTION)
@@ -939,13 +953,35 @@ int main(void)
         APP_ERROR_CHECK(ret);
     }
 
+//    while(!connectedF){
+//
+//    }
     // Enter main loop.
-    for (;;)
-    {
-        while (app_usbd_event_queue_process())
-        {
-           app_usbd_cdc_acm_write(&m_app_cdc_acm,(void *)arr,sizeof(arr));
-        }
-        idle_state_handle();
-    }
+		for (;;)
+		{
+
+			if(bsp_board_button_state_get(BUTTON_1)){
+
+				ret_value = ble_nus_c_string_send(&m_ble_nus_c, test, sizeof(test));
+				nrf_delay_ms(100);
+						if ((ret_value != NRF_SUCCESS) && (ret_value != NRF_ERROR_BUSY))
+						{
+							SEGGER_RTT_printf(0,"Failed sending NUS message. Error 0x%x. \n", ret_value);
+//							APP_ERROR_CHECK(ret_value);
+						}
+
+			nrf_delay_ms(100);
+			}
+			while (app_usbd_event_queue_process())
+			{
+				nrf_delay_ms(250);
+				ret = app_usbd_cdc_acm_write(&m_app_cdc_acm,(void *)test,sizeof(test));
+				if ((ret != NRF_SUCCESS) && (ret != NRF_ERROR_BUSY))
+					{
+						SEGGER_RTT_printf(0,"Failed app_usbd_cdc_acm_write. Error 0x%x. \n", ret);
+					}
+			}
+
+			//idle_state_handle();
+		}
 }
