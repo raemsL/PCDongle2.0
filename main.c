@@ -153,7 +153,7 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(m_app_cdc_acm,
                             CDC_ACM_COMM_EPIN,
                             CDC_ACM_DATA_EPIN,
                             CDC_ACM_DATA_EPOUT,
-                            APP_USBD_CDC_COMM_PROTOCOL_AT_V250
+							APP_USBD_CDC_COMM_PROTOCOL_VENDOR
 );
 
 APP_TIMER_DEF(m_blink_cdc);
@@ -519,6 +519,19 @@ void gatt_init(void)
 }
 
 
+/**@brief Function for initializing the Nordic UART Service (NUS) client. */
+static void nus_c_init(void)
+{
+    ret_code_t       err_code;
+    ble_nus_c_init_t init;
+
+    init.evt_handler = ble_nus_c_evt_handler;
+
+    err_code = ble_nus_c_init(&m_ble_nus_c, &init);
+    APP_ERROR_CHECK(err_code);
+}
+
+
 /*===============================================================================================================
 *
 *								END OF BLUETOOTH LOW ENERGY CENTRAL FUNCTIONS
@@ -771,17 +784,6 @@ void bsp_event_handler(bsp_event_t event)
 
 
 
-/**@brief Function for initializing the Nordic UART Service (NUS) client. */
-static void nus_c_init(void)
-{
-    ret_code_t       err_code;
-    ble_nus_c_init_t init;
-
-    init.evt_handler = ble_nus_c_evt_handler;
-
-    err_code = ble_nus_c_init(&m_ble_nus_c, &init);
-    APP_ERROR_CHECK(err_code);
-}
 
 
 /**@brief Function for initializing buttons and leds. */
@@ -793,11 +795,11 @@ static void buttons_leds_init(void)
     err_code = bsp_init(BSP_INIT_LEDS, bsp_event_handler);
     APP_ERROR_CHECK(err_code);
 
-//    err_code = bsp_init(BSP_INIT_BUTTONS, bsp_event_handler);
-//    APP_ERROR_CHECK(err_code);
-
-    err_code = bsp_btn_ble_init(NULL, &startup_event);
+    err_code = bsp_init(BSP_INIT_BUTTONS, bsp_event_handler);
     APP_ERROR_CHECK(err_code);
+
+//    err_code = bsp_btn_ble_init(NULL, &startup_event);
+//    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -915,7 +917,7 @@ int main(void)
     static const app_usbd_config_t usbd_config = {
         .ev_state_proc = usbd_user_ev_handler
     };
-//    ret = app_usbd_init(&usbd_config);
+    ret = app_usbd_init(&usbd_config);
     APP_ERROR_CHECK(ret);
 
     log_init();
@@ -935,12 +937,12 @@ int main(void)
     db_discovery_init();
     power_management_init();
 
-//    app_usbd_serial_num_generate();
+    app_usbd_serial_num_generate();
 
-  //  The created instance is added to the USBD library
-//    app_usbd_class_inst_t const * class_cdc_acm = app_usbd_cdc_acm_class_inst_get(&m_app_cdc_acm);
-//    ret = app_usbd_class_append(class_cdc_acm);
-//    APP_ERROR_CHECK(ret);
+//    The created instance is added to the USBD library
+    app_usbd_class_inst_t const * class_cdc_acm = app_usbd_cdc_acm_class_inst_get(&m_app_cdc_acm);
+    ret = app_usbd_class_append(class_cdc_acm);
+    APP_ERROR_CHECK(ret);
 
     SEGGER_RTT_WriteString(0, "HALLO RAMON \n");
    	ble_stack_init();
@@ -950,28 +952,25 @@ int main(void)
 
     scan_start();
 
-//    if (USBD_POWER_DETECTION)
-//    {
-//        ret = app_usbd_power_events_enable();
-//        APP_ERROR_CHECK(ret);
-//    }
+    if (USBD_POWER_DETECTION)
+    {
+        ret = app_usbd_power_events_enable();
+        APP_ERROR_CHECK(ret);
+    }
 
     while(!connectedF){
 
     }
     // Enter main loop.
+
+    // ACHTUNG : bei längeren delays wird der USB nicht mehr von WIndows erkannt !!!!!!!!!
+    //nrf_delay_ms(100);	// Funktioniert noch
+
 		for (;;)
 		{
-//			while (app_usbd_event_queue_process())
-//			{
-//				nrf_delay_ms(250);
-//				ret = app_usbd_cdc_acm_write(&m_app_cdc_acm,(void *)test,sizeof(test));
-//				if ((ret != NRF_SUCCESS) && (ret != NRF_ERROR_BUSY))
-//					{
-//						SEGGER_RTT_printf(0,"Failed app_usbd_cdc_acm_write. Error 0x%x. \n", ret);
-//					}
-//			}
-
+			while (app_usbd_event_queue_process())
+			{
 			idle_state_handle();
+			}
 		}
 }
