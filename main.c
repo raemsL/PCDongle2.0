@@ -119,7 +119,7 @@ static bool connectedF = false;
 #define BTN_CDC_DATA_KEY_RELEASE        (bsp_event_t)(BSP_EVENT_KEY_LAST + 1)
 
 #define LED_BLINK_INTERVAL 800
-
+bool USBD_STARTED_FLAG = false;
 /**
  * @brief Enable power USB detection
  *
@@ -128,8 +128,6 @@ static bool connectedF = false;
 #ifndef USBD_POWER_DETECTION
 #define USBD_POWER_DETECTION true
 #endif
-
-#define READ_SIZE 1
 
 //creating a CDC class instance
 static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
@@ -142,7 +140,7 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 #define CDC_ACM_DATA_EPIN       NRF_DRV_USBD_EPIN1
 #define CDC_ACM_DATA_EPOUT      NRF_DRV_USBD_EPOUT1
 
-static char m_cdc_data_array[BLE_NUS_MAX_DATA_LEN];
+uint8_t m_cdc_data_array[BLE_NUS_MAX_DATA_LEN];
 /**
  * @brief CDC_ACM class instance
  * */
@@ -158,9 +156,6 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(m_app_cdc_acm,
 
 APP_TIMER_DEF(m_blink_cdc);
 
-static char m_rx_buffer[READ_SIZE];
-static char m_tx_buffer[NRF_DRV_USBD_EPSIZE];
-static bool m_send_flag = 0;
 
 /*===============================================================================================================
 *										END OF USBD CDC ACM DEFINITIONS
@@ -282,22 +277,15 @@ static void ble_nus_chars_received(uint8_t * p_data, uint16_t data_len)
 	{
 		do
 		{
-			SEGGER_RTT_printf(0,"DATA[%d] : %02X \n",i, p_data[i]);
-			//////////////////////////////////////////////////////////////////////
-			// put the data to usbd. ====> (ret_val = app_uart_put(p_data[i]);)
-			//////////////////////////////////////////////////////////////////////
+			ret_val = app_usbd_cdc_acm_write(&m_app_cdc_acm, p_data, data_len);
 			if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
 			{
 				SEGGER_RTT_printf(0,"app_uart_put failed for index 0x%04x.\n", i);
 				APP_ERROR_CHECK(ret_val);
 			}
 		} while (ret_val == NRF_ERROR_BUSY);
-		SEGGER_RTT_printf(0,"Length : %d \n ", data_len);
 	}
-	if (p_data[data_len-1] == '\r')
-	{
 
-	}
 	if (ECHOBACK_BLE_UART_DATA)// ECHO ===> sends received data back to transmitter
 	{
 		// Send data back to the peripheral.
@@ -344,10 +332,7 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
 
         case BLE_NUS_C_EVT_NUS_TX_EVT:
             SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_NUS_TX_EVT \n");
-        	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////<=============
-//            ble_nus_chars_received(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////<=============
-
+            ble_nus_chars_received(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
             break;
 
         case BLE_NUS_C_EVT_DISCONNECTED:
@@ -555,11 +540,13 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 {
     app_usbd_cdc_acm_t const * p_cdc_acm = app_usbd_cdc_acm_class_get(p_inst);
     ret_code_t ret;
+    uint8_t rxSize = 0;
     switch (event)
         {
             case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN:
             {
                 /*Set up the first transfer*/
+                USBD_STARTED_FLAG = true;
                 ret_code_t ret = app_usbd_cdc_acm_read(&m_app_cdc_acm,
                                                        m_cdc_data_array,
                                                        1);
@@ -571,6 +558,7 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
             }
 
             case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE:
+                USBD_STARTED_FLAG = false;
             	SEGGER_RTT_WriteString(0,"APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE \n");
                 if (m_usb_connected)
                 {
@@ -587,6 +575,17 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 
             case APP_USBD_CDC_ACM_USER_EVT_RX_DONE:
             {
+				rxSize = app_usbd_cdc_acm_rx_size(&m_app_cdc_acm);
+				do
+				{
+					ret = ble_nus_c_string_send(&m_ble_nus_c, m_cdc_data_array, rxSize);
+					if ((ret != NRF_SUCCESS) && (ret != NRF_ERROR_BUSY))
+					{
+						SEGGER_RTT_printf(0,"Failed sending NUS message. Error 0x%x. \n", ret);
+						APP_ERROR_CHECK(ret);
+					}
+				} while (ret == NRF_ERROR_BUSY);
+
             	SEGGER_RTT_WriteString(0,"APP_USBD_CDC_ACM_USER_EVT_RX_DONE \n");
             	static uint8_t index = 0;
             	index++;
@@ -902,7 +901,8 @@ void vddInit(void)
   }
 }
 
-
+// ACHTUNG : bei längeren delays wird der USB nicht mehr von WIndows erkannt !!!!!!!!!
+//nrf_delay_ms(100);	// Funktioniert noch
 int main(void)
 {
     nvmcErase();
@@ -963,8 +963,7 @@ int main(void)
     }
     // Enter main loop.
 
-    // ACHTUNG : bei längeren delays wird der USB nicht mehr von WIndows erkannt !!!!!!!!!
-    //nrf_delay_ms(100);	// Funktioniert noch
+
 
 		for (;;)
 		{
