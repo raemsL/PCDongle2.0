@@ -109,7 +109,7 @@ static void on_hvx(ble_nus_c_t * p_ble_nus_c, ble_evt_t const * p_ble_evt)
     {
         ble_nus_c_evt_t ble_nus_c_evt;
 
-        ble_nus_c_evt.evt_type = BLE_NUS_C_EVT_NUS_TX_EVT;
+        ble_nus_c_evt.evt_type = BLE_NUS_C_EVT_NUS_RX_EVT;
         ble_nus_c_evt.p_data   = (uint8_t *)p_ble_evt->evt.gattc_evt.params.hvx.data;
         ble_nus_c_evt.data_len = p_ble_evt->evt.gattc_evt.params.hvx.len;
 

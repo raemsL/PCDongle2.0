@@ -102,7 +102,8 @@ NRF_SDH_BLE_OBSERVERS(_name ## _obs,                     \
 //#define ROBEX_DEVICE_NAME0				{"RobEx_00"}
 //#define ROBEX_DEVICE_NAME1				{"RobEx_01"}
 
-#define NUS_BASE_UUID                   {{0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0, 0x93, 0xF3, 0xA3, 0xB5, 0x00, 0x00, 0x40, 0x6E}} /**< Used vendor specific UUID. */
+//#define NUS_BASE_UUID                   {{0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0, 0x93, 0xF3, 0xA3, 0xB5, 0x00, 0x00, 0x40, 0x6E}} // NR.1
+#define NUS_BASE_UUID					{{0x32, 0xFD, 0x0D, 0x55, 0x4C, 0x18, 0xE1, 0xBB, 0x20, 0x4E, 0x03, 0xED, 0x00, 0x00, 0xFD, 0x8E}} // NR.2  --->{{0x32, 0xFD, 0x0D, 0x55, 0x4C, 0x18, 0xE1, 0xBB, 0x20, 0x4E, 0x03, 0xED, 0x51, 0xF3, 0xFD, 0x8E}}
 
 #define BLE_UUID_NUS_SERVICE            0x0001                      /**< The UUID of the Nordic UART Service. */
 #define BLE_UUID_NUS_RX_CHARACTERISTIC  0x0002                      /**< The UUID of the RX Characteristic. */
@@ -124,7 +125,7 @@ NRF_SDH_BLE_OBSERVERS(_name ## _obs,                     \
 typedef enum
 {
     BLE_NUS_C_EVT_DISCOVERY_COMPLETE,   /**< Event indicating that the NUS service and its characteristics was found. */
-    BLE_NUS_C_EVT_NUS_TX_EVT,           /**< Event indicating that the central has received something from a peer. */
+    BLE_NUS_C_EVT_NUS_RX_EVT,           /**< Event indicating that the central has received something from a peer. */
     BLE_NUS_C_EVT_DISCONNECTED          /**< Event indicating that the NUS server has disconnected. */
 } ble_nus_c_evt_type_t;
 

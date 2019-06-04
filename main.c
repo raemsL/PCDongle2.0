@@ -275,15 +275,15 @@ static void ble_nus_chars_received(uint8_t * p_data, uint16_t data_len)
 
 	for (uint32_t i = 0; i < data_len; i++)
 	{
-		do
-		{
-			ret_val = app_usbd_cdc_acm_write(&m_app_cdc_acm, p_data, data_len);
-			if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
-			{
-				SEGGER_RTT_printf(0,"app_uart_put failed for index 0x%04x.\n", i);
-				APP_ERROR_CHECK(ret_val);
-			}
-		} while (ret_val == NRF_ERROR_BUSY);
+//		do
+//		{
+//			ret_val = app_usbd_cdc_acm_write(&m_app_cdc_acm, p_data, data_len);
+//			if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
+//			{
+//				SEGGER_RTT_printf(0,"app_uart_put failed for index 0x%04x.\n", i);
+//				APP_ERROR_CHECK(ret_val);
+//			}
+//		} while (ret_val == NRF_ERROR_BUSY);
 	}
 
 	if (ECHOBACK_BLE_UART_DATA)// ECHO ===> sends received data back to transmitter
@@ -330,8 +330,8 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
             SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_DISCOVERY_COMPLETE \n");
             break;
 
-        case BLE_NUS_C_EVT_NUS_TX_EVT:
-            SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_NUS_TX_EVT \n");
+        case BLE_NUS_C_EVT_NUS_RX_EVT:
+            SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_NUS_RX_EVT \n");
             ble_nus_chars_received(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
             break;
 
@@ -944,7 +944,7 @@ int main(void)
     ret = app_usbd_class_append(class_cdc_acm);
     APP_ERROR_CHECK(ret);
 
-    SEGGER_RTT_WriteString(0, "HALLO RAMON \n");
+
    	ble_stack_init();
 	gatt_init();
 	nus_c_init();
@@ -957,19 +957,16 @@ int main(void)
         ret = app_usbd_power_events_enable();
         APP_ERROR_CHECK(ret);
     }
-
-    while(!connectedF){
-
-    }
     // Enter main loop.
-
-
-
-		for (;;)
+//sdfsdfs
+	for (;;)
+	{
+		while (app_usbd_event_queue_process())
 		{
-			while (app_usbd_event_queue_process())
+			while(connectedF)
 			{
-			idle_state_handle();
+				//idle_state_handle();
 			}
 		}
+	}
 }
