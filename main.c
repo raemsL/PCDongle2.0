@@ -984,7 +984,7 @@ int main(void)
         APP_ERROR_CHECK(ret);
     }
     // Enter main loop.
-//sdfsdfs
+
 	for (;;)
 	{
 		while (app_usbd_event_queue_process())
