@@ -87,6 +87,11 @@ unsigned char test[] = "Ich bin Ramon Loher \n";
 
 APP_TIMER_DEF(m_blink_ble);
 
+static volatile bool BLE_NUS_RX_EVT_FLAG = false;
+
+static uint8_t m_nus_txData_array[BLE_NUS_MAX_DATA_LEN];
+static uint8_t m_nus_rxData_array[BLE_NUS_MAX_DATA_LEN];
+
 BLE_NUS_C_DEF(m_ble_nus_c);                                             /**< BLE Nordic UART Service (NUS) client instance. */
 NRF_BLE_GATT_DEF(m_gatt);                                               /**< GATT module instance. */
 BLE_DB_DISCOVERY_DEF(m_db_disc);                                        /**< Database discovery module instance. */
@@ -113,7 +118,13 @@ static bool connectedF = false;
 /*===============================================================================================================
 *										BEGIN OF USBD CDC ACM DEFINITIONS
 ================================================================================================================*/
+static volatile bool USBD_CDC_ACM_TX_DONE_FLAG = false;
+static volatile bool USBD_CDC_ACM_RX_DONE_FLAG = false;
+static volatile bool USBD_CDC_ACM_PORT_CLOSE_FLAG = false;
+static volatile bool USBD_CDC_ACM_PORT_OPEN_FLAG = false;
 
+
+#define USBCDC_ECHOBACK 1
 #define BTN_CDC_DATA_SEND       0
 #define BTN_CDC_NOTIFY_SEND     1
 #define BTN_CDC_DATA_KEY_RELEASE        (bsp_event_t)(BSP_EVENT_KEY_LAST + 1)
@@ -140,7 +151,8 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 #define CDC_ACM_DATA_EPIN       NRF_DRV_USBD_EPIN1
 #define CDC_ACM_DATA_EPOUT      NRF_DRV_USBD_EPOUT1
 
-uint8_t m_cdc_data_array[BLE_NUS_MAX_DATA_LEN];
+static uint8_t m_usbd_cdc_txData_array[BLE_NUS_MAX_DATA_LEN];
+static uint8_t m_usbd_cdc_rxData_array[BLE_NUS_MAX_DATA_LEN];
 /**
  * @brief CDC_ACM class instance
  * */
@@ -151,7 +163,7 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(m_app_cdc_acm,
                             CDC_ACM_COMM_EPIN,
                             CDC_ACM_DATA_EPIN,
                             CDC_ACM_DATA_EPOUT,
-							APP_USBD_CDC_COMM_PROTOCOL_VENDOR
+							APP_USBD_CDC_COMM_PROTOCOL_AT_V250 //APP_USBD_CDC_COMM_PROTOCOL_VENDOR
 );
 
 APP_TIMER_DEF(m_blink_cdc);
@@ -261,6 +273,15 @@ static void scan_init(void)
     SEGGER_RTT_WriteString(0,"scan_init() \n");
 }
 
+
+static void printIncomeMsg(uint8_t * p_data, uint16_t data_len){
+
+	SEGGER_RTT_printf(0,"RX: Byte: %lu, HEX: ",data_len);
+	for(uint8_t i = 0 ; i < data_len ; i++){
+		SEGGER_RTT_printf(0,"%02X ",p_data[i]);
+	}
+	SEGGER_RTT_printf(0,"\n");
+}
 /**@brief Function for handling characters received by the Nordic UART Service (NUS).
  *
  * @details This function takes a list of characters of length data_len and prints the characters out on UART.
@@ -270,37 +291,19 @@ static void ble_nus_chars_received(uint8_t * p_data, uint16_t data_len)
 {
     ret_code_t ret_val = NRF_SUCCESS;
     SEGGER_RTT_WriteString(0,"ble_nus_chars_received() \n");
+    NRF_LOG_DEBUG("Received data from BLE NUS. Writing data on CDC ACM.\n");
     NRF_LOG_HEXDUMP_DEBUG(p_data, data_len);
 
+    // Send data through CDC ACM
+    ret_code_t ret = app_usbd_cdc_acm_write(&m_app_cdc_acm,
+											p_data,
+											data_len);
+    if(ret != NRF_SUCCESS)
+    {
+        NRF_LOG_INFO("CDC ACM unavailable, ERROR: %02X \n",ret);
+    }
+	printIncomeMsg(p_data,data_len);
 
-	for (uint32_t i = 0; i < data_len; i++)
-	{
-//		do
-//		{
-//			ret_val = app_usbd_cdc_acm_write(&m_app_cdc_acm, p_data, data_len);
-//			if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
-//			{
-//				SEGGER_RTT_printf(0,"app_uart_put failed for index 0x%04x.\n", i);
-//				APP_ERROR_CHECK(ret_val);
-//			}
-//		} while (ret_val == NRF_ERROR_BUSY);
-	}
-
-	if (ECHOBACK_BLE_UART_DATA)// ECHO ===> sends received data back to transmitter
-	{
-		// Send data back to the peripheral.
-		do
-		{
-			ret_val = ble_nus_c_string_send(&m_ble_nus_c, test, sizeof(test));
-			if ((ret_val != NRF_SUCCESS) && (ret_val != NRF_ERROR_BUSY))
-			{
-				SEGGER_RTT_printf(0,"Failed sending NUS message. Error 0x%x. \n", ret_val);
-				APP_ERROR_CHECK(ret_val);
-			}
-		} while (ret_val == NRF_ERROR_BUSY);
-	}
-
-    SEGGER_RTT_WriteString(0,"ble_nus_chars_received_uart_print() \n");
 }
 
 
@@ -332,6 +335,7 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
 
         case BLE_NUS_C_EVT_NUS_RX_EVT:
             SEGGER_RTT_WriteString(0,"BLE_NUS_C_EVT_NUS_RX_EVT \n");
+            BLE_NUS_RX_EVT_FLAG = true;
             ble_nus_chars_received(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
             break;
 
@@ -350,7 +354,7 @@ static void ble_nus_c_evt_handler(ble_nus_c_t * p_ble_nus_c, ble_nus_c_evt_t con
  */
 static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 {
-    SEGGER_RTT_WriteString(0,"ble_evt_handler() \n");
+
     ret_code_t            err_code;
     ble_gap_evt_t const * p_gap_evt = &p_ble_evt->evt.gap_evt;
 
@@ -540,56 +544,72 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 {
     app_usbd_cdc_acm_t const * p_cdc_acm = app_usbd_cdc_acm_class_get(p_inst);
     ret_code_t ret;
-    uint8_t rxSize = 0;
     switch (event)
         {
             case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN:
             {
                 /*Set up the first transfer*/
-                USBD_STARTED_FLAG = true;
-                ret_code_t ret = app_usbd_cdc_acm_read(&m_app_cdc_acm,
-                                                       m_cdc_data_array,
-                                                       1);
+            	USBD_CDC_ACM_PORT_OPEN_FLAG = true;
+            	USBD_CDC_ACM_PORT_CLOSE_FLAG = false;
+                ret_code_t ret = app_usbd_cdc_acm_read_any(&m_app_cdc_acm,
+                                                       m_usbd_cdc_rxData_array,
+													   BLE_NUS_MAX_DATA_LEN);
                 UNUSED_VARIABLE(ret);
                 ret = app_timer_stop(m_blink_cdc);
+                bsp_board_led_on(LEDG1);
                 APP_ERROR_CHECK(ret);
             	SEGGER_RTT_WriteString(0,"APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN \n");
                 break;
             }
 
             case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE:
-                USBD_STARTED_FLAG = false;
+            	USBD_CDC_ACM_PORT_CLOSE_FLAG = true;
+            	USBD_CDC_ACM_PORT_OPEN_FLAG = false;
+
             	SEGGER_RTT_WriteString(0,"APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE \n");
                 if (m_usb_connected)
                 {
                     ret_code_t ret = app_timer_start(m_blink_cdc,
                                                      APP_TIMER_TICKS(LED_BLINK_INTERVAL),
                                                      (void *) LEDG1);
+                    bsp_board_led_on(LEDG1);
                     APP_ERROR_CHECK(ret);
                 }
                 break;
 
             case APP_USBD_CDC_ACM_USER_EVT_TX_DONE:
+            	USBD_CDC_ACM_TX_DONE_FLAG = true;
             	SEGGER_RTT_WriteString(0,"APP_USBD_CDC_ACM_USER_EVT_TX_DONE \n");
+
                 break;
 
             case APP_USBD_CDC_ACM_USER_EVT_RX_DONE:
             {
-				rxSize = app_usbd_cdc_acm_rx_size(&m_app_cdc_acm);
+            	ret_code_t ret;
+            	size_t size = 0;
+            	USBD_CDC_ACM_RX_DONE_FLAG = true;
+            	SEGGER_RTT_WriteString(0,"APP_USBD_CDC_ACM_USER_EVT_RX_DONE \n");
+
+				NRF_LOG_INFO("Bytes waiting: %d", app_usbd_cdc_acm_bytes_stored(&m_app_cdc_acm));
 				do
 				{
-					ret = ble_nus_c_string_send(&m_ble_nus_c, m_cdc_data_array, rxSize);
-					if ((ret != NRF_SUCCESS) && (ret != NRF_ERROR_BUSY))
-					{
-						SEGGER_RTT_printf(0,"Failed sending NUS message. Error 0x%x. \n", ret);
-						APP_ERROR_CHECK(ret);
+					/*Get amount of data transfered*/
+					size = app_usbd_cdc_acm_rx_size(&m_app_cdc_acm);
+					SEGGER_RTT_printf(0,"RX: Byte: %lu, HEX: ",size);
+					for(uint8_t i = 0 ; i < size ; i++){
+						SEGGER_RTT_printf(0,"%02X ",m_usbd_cdc_rxData_array[i]);
 					}
-				} while (ret == NRF_ERROR_BUSY);
+					SEGGER_RTT_printf(0,"\n");
+					/* Fetch data until internal buffer is empty */
+					ret = app_usbd_cdc_acm_read_any(&m_app_cdc_acm,
+												m_usbd_cdc_rxData_array,
+												BLE_NUS_MAX_DATA_LEN);
+				} while (ret == NRF_SUCCESS);
 
-            	SEGGER_RTT_WriteString(0,"APP_USBD_CDC_ACM_USER_EVT_RX_DONE \n");
-            	static uint8_t index = 0;
-            	index++;
-
+				ret = ble_nus_c_string_send(&m_ble_nus_c,m_usbd_cdc_rxData_array,size);
+				if(ret != NRF_SUCCESS){
+					SEGGER_RTT_WriteString(0,"ble_nus_c_string_send --->> ERROR \n");
+				}
 				break;
             }
 
@@ -598,6 +618,9 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
                 break;
         }
 }
+
+
+
 
 static void usbd_user_ev_handler(app_usbd_event_type_t event)
 {
@@ -865,6 +888,9 @@ void blink_handler(void * p_context)
 {
     bsp_board_led_invert((uint32_t) p_context);
 }
+
+
+
 /*============================================================================================================
  *
  * 												END OF OTHER FUNCTIONS
@@ -963,9 +989,24 @@ int main(void)
 	{
 		while (app_usbd_event_queue_process())
 		{
-			while(connectedF)
-			{
-				//idle_state_handle();
+			if(USBD_CDC_ACM_PORT_OPEN_FLAG){
+				if(USBD_CDC_ACM_RX_DONE_FLAG)
+				{
+
+					USBD_CDC_ACM_RX_DONE_FLAG = false;
+				}
+				if(USBD_CDC_ACM_TX_DONE_FLAG)
+				{
+
+					USBD_CDC_ACM_TX_DONE_FLAG = false;
+				}
+				if(BLE_NUS_RX_EVT_FLAG)
+				{
+	            SEGGER_RTT_printf(0,"BLE_NUS_RX_EVT_FLAG = true \n");
+
+	            //ble_nus_chars_received(p_ble_nus_evt->p_data, p_ble_nus_evt->data_len);
+	            BLE_NUS_RX_EVT_FLAG = false;
+				}
 			}
 		}
 	}
