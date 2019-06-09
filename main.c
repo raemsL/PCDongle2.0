@@ -360,7 +360,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 
     switch (p_ble_evt->header.evt_id)
     {
-        case BLE_GAP_EVT_CONNECTED:
+        case BLE_GAP_EVT_CONNECTED:  //Connected to peer.
             err_code = ble_nus_c_handles_assign(&m_ble_nus_c, p_ble_evt->evt.gap_evt.conn_handle, NULL);
             APP_ERROR_CHECK(err_code);
 
@@ -375,7 +375,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_CONNECTED \n");
             break;
 
-        case BLE_GAP_EVT_DISCONNECTED:
+        case BLE_GAP_EVT_DISCONNECTED:	//Disconnected from peer.
         	bsp_board_led_off(LEDG2);
         	SEGGER_RTT_printf(0,"Disconnected. conn_handle: 0x%x, reason: 0x%x \n",
                          p_gap_evt->conn_handle,
@@ -406,7 +406,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_SEC_PARAMS_REQUEST \n");
             break;
 
-        case BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST:
+        case BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST:	//Connection Parameter Update Request.
             // Accepting parameters requested by peer.
             err_code = sd_ble_gap_conn_param_update(p_gap_evt->conn_handle,
                                                     &p_gap_evt->params.conn_param_update_request.conn_params);
@@ -414,7 +414,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             SEGGER_RTT_WriteString(0,"BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST \n");
             break;
 
-        case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
+        case BLE_GAP_EVT_PHY_UPDATE_REQUEST:	// PHY Update Request.
         {
             NRF_LOG_DEBUG("PHY update request.");
             ble_gap_phys_t const phys =
@@ -948,28 +948,35 @@ int main(void)
 
     log_init();
 
-    ret = nrf_drv_clock_init();
-    APP_ERROR_CHECK(ret);
-
-    nrf_drv_clock_lfclk_request(NULL);
-
-    while(!nrf_drv_clock_lfclk_is_running())
-    {
-        /* Just waiting */
-    }
+//    ret = nrf_drv_clock_init();
+//    APP_ERROR_CHECK(ret);
+//
+//    nrf_drv_clock_lfclk_request(NULL);
+//
+//    while(!nrf_drv_clock_lfclk_is_running())
+//    {
+//        /* Just waiting */
+//    }
 
     timer_init();
     buttons_leds_init();
     db_discovery_init();
     power_management_init();
+//
+//    app_usbd_serial_num_generate();
+//
+//    //The created instance is added to the USBD library
+//    app_usbd_class_inst_t const * class_cdc_acm = app_usbd_cdc_acm_class_inst_get(&m_app_cdc_acm);
+//    ret = app_usbd_class_append(class_cdc_acm);
+//    APP_ERROR_CHECK(ret);
 
-    app_usbd_serial_num_generate();
 
 //    The created instance is added to the USBD library
     app_usbd_class_inst_t const * class_cdc_acm = app_usbd_cdc_acm_class_inst_get(&m_app_cdc_acm);
     ret = app_usbd_class_append(class_cdc_acm);
     APP_ERROR_CHECK(ret);
 
+    scan_start();
 
    	ble_stack_init();
 	gatt_init();
