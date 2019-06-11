@@ -72,11 +72,31 @@
 #include "nrf_log_default_backends.h"
 #include "SEGGER_RTT.h"
 
+typedef struct
+{
+    uint16_t        att_mtu;                    /**< GATT ATT MTU, in bytes. */
+    uint16_t        conn_interval;              /**< Connection interval expressed in units of 1.25 ms. */
+    ble_gap_phys_t  phys;                       /**< Preferred PHYs. */
+    uint8_t         data_len;                   /**< Data length. */
+    bool            conn_evt_len_ext_enabled;   /**< Connection event length extension status. */
+} test_params_t;
+
 
 unsigned char test[] = "Ich bin Ramon Loher \n";
 /*===============================================================================================================
 *								BLUETOOTH LOW ENERGY CENTRAL DEFINITIONS
 ================================================================================================================*/
+#define CONN_INTERVAL_DEFAULT           (uint16_t)(MSEC_TO_UNITS(7.5, UNIT_1_25_MS))    /**< Default connection interval used at connection establishment by central side. */
+static test_params_t m_test_params =
+{
+    .att_mtu                  = NRF_SDH_BLE_GATT_MAX_MTU_SIZE,
+    .data_len                 = NRF_SDH_BLE_GAP_DATA_LENGTH,
+    .conn_interval            = CONN_INTERVAL_DEFAULT,
+    .conn_evt_len_ext_enabled = true,
+    .phys.tx_phys             = BLE_GAP_PHY_1MBPS,
+    .phys.rx_phys             = BLE_GAP_PHY_1MBPS,
+
+};
 
 #define APP_BLE_CONN_CFG_TAG    1                                       /**< Tag that refers to the BLE stack configuration set with @ref sd_ble_cfg_set. The default tag is @ref BLE_CONN_CFG_TAG_DEFAULT. */
 #define APP_BLE_OBSERVER_PRIO   3                                       /**< BLE observer priority of the application. There is no need to modify this value. */
@@ -927,6 +947,23 @@ void vddInit(void)
   }
 }
 
+
+void conn_evt_len_ext_set(bool status)
+{
+    ret_code_t err_code;
+    ble_opt_t  opt;
+
+    memset(&opt, 0x00, sizeof(opt));
+    opt.common_opt.conn_evt_ext.enable = status ? 1 : 0;
+
+    err_code = sd_ble_opt_set(BLE_COMMON_OPT_CONN_EVT_EXT, &opt);
+    APP_ERROR_CHECK(err_code);
+
+    m_test_params.conn_evt_len_ext_enabled = status;
+}
+
+
+
 // ACHTUNG : bei längeren delays wird der USB nicht mehr von WIndows erkannt !!!!!!!!!
 //nrf_delay_ms(100);	// Funktioniert noch
 int main(void)
@@ -974,7 +1011,7 @@ int main(void)
 	gatt_init();
 	nus_c_init();
 	scan_init();
-
+    conn_evt_len_ext_set(m_test_params.conn_evt_len_ext_enabled);
     scan_start();
 
     if (USBD_POWER_DETECTION)
